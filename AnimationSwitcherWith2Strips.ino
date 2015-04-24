@@ -12,21 +12,14 @@ A lot of the code hsa been based on the work of Mark Kriegsman (FastLED)
 
 // LEDs
 #define NUM_LEDS        60                                    // Number of LED's.
-#define MAX_BRIGTHTNESS 124                                   // Overall brightness definition. It can be changed on the fly.
+#define MAX_BRIGTHTNESS 60                                   // Overall brightness definition. It can be changed on the fly.
 struct CRGB leds[NUM_LEDS];                                   // Initialize our LED array.
 
 // Animations
 uint8_t gHue = 0; 
 
-// Twinkle animation 
-int     ranamount =  50;                                      // The higher the number, lowers the chance for a pixel to light up.
-uint8_t   fadeval = 224;                                      // Fade rate
-uint8_t twinkleDelay = 50;
-
-// Ripple
-#define MAX_STEPS 16                                           
-
-uint8_t bgcol = 0;                                            // Background colour rotates.
+// Ripple animation
+#define RIPPLE_FADE_RATE 255
 
 // Switcher
 #define BUTTON_PIN 12
@@ -68,7 +61,8 @@ void loop () {
   
   switch(state) { 
     case 0:
-      ripple(true);  
+      // 16-40 max ripple length, fading to black at 75% (192/256ths)
+      ripple(random8(16,40), 192);   
       break;
     
     case 1:
@@ -80,16 +74,17 @@ void loop () {
       break;
       
     case 4: 
-      applause(); 
+      applause(HUE_BLUE, HUE_PURPLE); 
+      staticDelay = false;
       break; 
       
     case 5:
-      twinkle(); 
+      twinkle(50, 224); 
       staticDelay = false;
       break;
       
     case 6: 
-       confetti();
+      confetti(20, 10);
       break;
      
    case 7: 
@@ -99,8 +94,7 @@ void loop () {
      
   }
   
-  if (random8(2) % 2) 
-    gHue++;
+  gHue++;
 
   delay_at_max_brightness_for_power(staticDelay ? 125 : random8(1,100)*2.5);
   show_at_max_brightness_for_power();                         // Power managed display of LED's.
@@ -113,7 +107,7 @@ void juggle(uint8_t numDots, uint8_t baseBpmSpeed) {
   fadeToBlackBy(leds, NUM_LEDS, 100);
   byte dothue = 0;
   for(int i = 0; i < numDots; i++) {
-    leds[beatsin16(i+baseBpmSpeed,0,NUM_LEDS)] |= CHSV(dothue, 255, 224);
+    leds[beatsin16(i+baseBpmSpeed, 0, NUM_LEDS)] |= CHSV(dothue, 255, 224);
     dothue += (256 / numDots);
   }
 }
@@ -132,77 +126,89 @@ void bpm(uint8_t bpmSpeed, uint8_t stripeWidth)
 void sinelon(uint8_t bpmSpeed, uint8_t fadeAmount)
 {
   // a colored dot sweeping back and forth, with fading trails
-  fadeToBlackBy( leds, NUM_LEDS, fadeAmount);
+  fadeToBlackBy(leds, NUM_LEDS, fadeAmount);
   int pos = beatsin16(bpmSpeed, 0, NUM_LEDS);
-  leds[pos] += CHSV( gHue, 255, 192);
+  leds[pos] += CHSV(gHue, 255, 192);
 }
 
 // An animation to play while the crowd goes wild after the big performance
-void applause()
+void applause(uint8_t minHue, uint8_t maxHue)
 {
   static uint16_t lastPixel = 0;
-  fadeToBlackBy( leds, NUM_LEDS, 32);
-  leds[lastPixel] = CHSV(random8(HUE_BLUE,HUE_PURPLE),255,255);
+  fadeToBlackBy(leds, NUM_LEDS, 32);
+  leds[lastPixel] = CHSV(random8(minHue, maxHue), 255, 255);
   lastPixel = random16(NUM_LEDS);
   leds[lastPixel] = CRGB::White;
 }
 
-void confetti() 
+void confetti(uint8_t colorVariation, uint8_t fadeAmount)
 {
   // random colored speckles that blink in and fade smoothly
-  fadeToBlackBy( leds, NUM_LEDS, 10);
+  fadeToBlackBy(leds, NUM_LEDS, fadeAmount);
   int pos = random16(NUM_LEDS);
-  leds[pos] += CHSV(gHue + random8(64), 200, 255);
+  leds[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
 }
 
-void twinkle() {
-  if (ranamount >NUM_LEDS) ranamount = NUM_LEDS;               // Make sure we're at least utilizing ALL the LED's.
-  int idex = random16(0, ranamount);
-  if (idex < NUM_LEDS) {                                      // Only the lowest probability twinkles will do.
-    leds[idex] = random();                                    // The idex LED is set to a random 32 bit value
+// @param chanceOfTwinkle  The higher the number, lowers the chance for a pixel to light up. (50)
+// by @atuline
+void twinkle(uint8_t chanceOfTwinkle, uint8_t fadeRate) {
+  if (chanceOfTwinkle > NUM_LEDS) chanceOfTwinkle = NUM_LEDS;               // Make sure we're at least utilizing ALL the LED's.
+  int index = random16(0, chanceOfTwinkle);
+  if (index < NUM_LEDS) {                                      // Only the lowest probability twinkles will do.
+    leds[index] = random();                                    // The idex LED is set to a random 32 bit value
   }
-  for (int i = 0; i <NUM_LEDS; i++) leds[i].nscale8(fadeval); // Go through the array and reduce each RGB value by a percentage.
-} // twinkle()
+  for (int i = 0; i < NUM_LEDS; i++) 
+    leds[i].nscale8(fadeRate); // Go through the array and reduce each RGB value by a percentage.
+} 
 
 
 
-// Ripple from @atuline
-// TODO Rewrite
-void ripple(boolean randomizeColor) {
+// Ripple (inspired by @atuline)
+// Ripple effect with trailing dots (alternatively), color randomized for each ripple
+void ripple(int rippleSize, uint8_t fadeToBlackRate) {
 
   static int step = -1; 
-  static int center = 0;  // Center of the current ripple.       
-  static uint8_t fade = 255; // Starting brightness.  
-  static uint8_t colour; // Ripple colour is randomized.
+  static int center = 0;  // Center of the current ripple      
+  static uint8_t color; // Ripple colour
+  static boolean trailingDots; // whether to add trailing dots to the ripple
   
-  for (int i = 0; i < NUM_LEDS; ++i) leds[i] = CRGB::Black;
+  fadeToBlackBy(leds, NUM_LEDS, fadeToBlackRate);
   
-  switch (step) {
-
-    case -1:                                                          // Initialize ripple variables.
-      center = random(NUM_LEDS);
-      colour = randomizeColor ? random16(0, 256) : gHue;
-      step = 0;
-      break;
-
-    case 0:
-      leds[center] = CHSV(colour, 255, 255);                          // Display the first pixel of the ripple.
-      step ++;
-      break;
-
-    case MAX_STEPS:                                                    // At the end of the ripples.
-      step = -1;
-      break;
-
-    default:                                                             // Middle of the ripples.
-        leds[wrap(center + step)] += CHSV(colour, 255, fade/step * 2);   // Display the next pixels in the range for one side.
-        leds[wrap(center - step)] += CHSV(colour, 255, fade/step * 2);   // Display the next pixels in the range for the other side.
-        step ++;                                                         // Next step.
-        break;  
+  if (step == -1) {
+    
+    // Initalizing ripple 
+    center = random(NUM_LEDS); 
+    color = random16(0, 256);
+    trailingDots = random(0, 2) % 2;
+    step = 0;
+    
+  } else if (step == 0) {
+    
+    // First pixel of the ripple
+    leds[center] = CHSV(color, 255, 255);
+    step++;
+    
+  } else if (step < rippleSize) {
+    
+    // In the Ripple
+    uint8_t fading = RIPPLE_FADE_RATE/step * 2;
+    leds[wrap(center + step)] += CHSV(color, 255, fading);   // Display the next pixels in the range for one side.
+    leds[wrap(center - step)] += CHSV(color, 255, fading);   // Display the next pixels in the range for the other side.
+    step ++;
+    
+    if (trailingDots && step > 3) {
+      // Add trailing dots
+      leds[wrap(center + step - 3)] = CHSV(color, 255, fading);     
+      leds[wrap(center - step + 3)] = CHSV(color, 255, fading);   
+    }
+    
+  } else { 
+    // Ending the ripple
+    step = -1;
   }
 } 
  
-// TODO Remove this
+// Wrap around the strip
 int wrap(int step) {
   if(step < 0) return NUM_LEDS + step;
   if(step > NUM_LEDS - 1) return step - NUM_LEDS;
