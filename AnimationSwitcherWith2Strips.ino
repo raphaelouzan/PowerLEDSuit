@@ -15,16 +15,51 @@ A lot of the code hsa been based on the work of Mark Kriegsman (FastLED)
 #define MAX_BRIGTHTNESS 60                                   // Overall brightness definition. It can be changed on the fly.
 struct CRGB leds[NUM_LEDS];                                   // Initialize our LED array.
 
+// Switcher
+#define BUTTON_PIN 12
+int state = 0, maxStates = 8;
+OneButton button(BUTTON_PIN, true);
+
 // Animations
 uint8_t gHue = 0; 
 
 // Ripple animation
 #define RIPPLE_FADE_RATE 255
 
-// Switcher
-#define BUTTON_PIN 12
-int state = 0, maxStates = 8;
-OneButton button(BUTTON_PIN, true);
+typedef void (*AnimationPattern)(uint8_t arg1, uint8_t arg2);
+typedef struct { 
+  AnimationPattern mPattern;
+  uint8_t mArg1;
+  uint8_t mArg2;
+} AnimationPatternArguments;
+ 
+AnimationPatternArguments gPatternsAndArguments[] = {
+  // TODO Ripple should be at [up to] 40
+  {ripple,  20,  192},
+ 
+  {juggle, 2, 4},
+  {juggle, 3, 7},
+  {juggle, 8, 13},
+  
+  {sinelon,  7 /*BPM*/, 1 /*fadeAmount*/ },
+  {sinelon, 13 /*BPM*/, 10 /*fadeAmount*/ },
+  
+  {applause,     HUE_BLUE /*BPM*/, HUE_PURPLE /*stripeWidth*/},
+  {applause,    HUE_BLUE /*BPM*/, HUE_RED /*stripeWidth*/},
+  
+  {twinkle,     15 /*BPM*/, 100 /*stripeWidth*/},
+  {twinkle, 50 /*colorVariation*/, 224/*fadeAmount*/},
+  
+  {confetti,   20, 10},
+  {confetti, 16 /*colorVariation*/,  3/*fadeAmount*/},
+  
+  {bpm,     62 /*BPM*/, 3 /*stripeWidth*/},
+  {bpm,    125 /*BPM*/, 7 /*stripeWidth*/},
+  {bpm,     15 /*BPM*/, 1 /*stripeWidth*/}
+};
+ 
+ 
+uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 
 
 void setup() {
@@ -45,11 +80,12 @@ void setup() {
 } 
 
 void onClick() { 
-  state = (state + 1) % maxStates;  
+  const int numberOfPatterns = sizeof(gPatternsAndArguments) / sizeof( gPatternsAndArguments[0]);  
+  gCurrentPatternNumber = (gCurrentPatternNumber+1) % numberOfPatterns;
 }   
 
 void onDoubleClick() { 
-  state = 0; 
+  gCurrentPatternNumber = 0; 
 }
 
 void loop () {
@@ -59,40 +95,15 @@ void loop () {
   
   boolean staticDelay = true;
   
-  switch(state) { 
-    case 0:
-      // 16-40 max ripple length, fading to black at 75% (192/256ths)
-      ripple(random8(16,40), 192);   
-      break;
-    
-    case 1:
-      juggle(2,4); 
-      break;
-    
-    case 2: 
-      sinelon(13, 20);
-      break;
-      
-    case 4: 
-      applause(HUE_BLUE, HUE_PURPLE); 
-      staticDelay = false;
-      break; 
-      
-    case 5:
-      twinkle(50, 224); 
-      staticDelay = false;
-      break;
-      
-    case 6: 
-      confetti(20, 10);
-      break;
-     
-   case 7: 
-       bpm(62, 2);
-     break;
-     
-     
-  }
+  uint8_t arg1 = gPatternsAndArguments[gCurrentPatternNumber].mArg1;
+  uint8_t arg2 = gPatternsAndArguments[gCurrentPatternNumber].mArg2;
+  AnimationPattern pat = gPatternsAndArguments[gCurrentPatternNumber].mPattern;
+  
+  pat(arg1, arg2);
+  
+  // TODO add dynamicDelay  for twinkle and applause
+  
+  // TODO ripple has some weird flickering
   
   gHue++;
 
@@ -165,7 +176,8 @@ void twinkle(uint8_t chanceOfTwinkle, uint8_t fadeRate) {
 
 // Ripple (inspired by @atuline)
 // Ripple effect with trailing dots (alternatively), color randomized for each ripple
-void ripple(int rippleSize, uint8_t fadeToBlackRate) {
+// TODO randomize max ripple size with random8(16,40)
+void ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
 
   static int step = -1; 
   static int center = 0;  // Center of the current ripple      
