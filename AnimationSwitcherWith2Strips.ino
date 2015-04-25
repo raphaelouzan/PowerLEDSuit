@@ -50,9 +50,9 @@ AnimationPatternArguments gPatternsAndArguments[] = {
   {confetti, 20, 10},
   {confetti, 16,  3},
   
-  {bpm,     62 /*BPM*/, 3 /*stripeWidth*/},
-  {bpm,    125 /*BPM*/, 7 /*stripeWidth*/},
-  {bpm,     15 /*BPM*/, 1 /*stripeWidth*/}
+  {bpm,      62,  3},
+  {bpm,      125, 7},
+  {bpm,      15,  1}
 };
  
  
