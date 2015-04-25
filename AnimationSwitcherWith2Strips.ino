@@ -24,9 +24,18 @@ OneButton button(BUTTON_PIN, true);
 
 // Animations
 uint8_t gHue = 0; 
+
+#define RANDOM_DELAY  2
+#define STATIC_DELAY  3 
+#define NO_DELAY      1
+
+// Microphone
+#define MIC_PIN A10
+#include "SoundReactive.h"
+
 #define RIPPLE_FADE_RATE 255
 
-typedef void (*AnimationPattern)(uint8_t arg1, uint8_t arg2);
+typedef uint8_t (*AnimationPattern)(uint8_t arg1, uint8_t arg2);
 typedef struct { 
   AnimationPattern mPattern;
   uint8_t mArg1;
@@ -34,13 +43,14 @@ typedef struct {
 } AnimationPatternArguments;
  
 AnimationPatternArguments gPatternsAndArguments[] = {
-  {ripple,  40,  192},
+  {soundAnimate, 5, 5},
+  {ripple,  40,  50},
  
   {juggle,   2, 4},
   {juggle,   3, 7},
-  {juggle,   8, 13},
+  {juggle,   4, 13},
   
-  {sinelon,  7, 1},
+  {sinelon,  7, 4},
   {sinelon,  13, 10},
   
   {applause, HUE_BLUE, HUE_PURPLE},
@@ -59,7 +69,6 @@ AnimationPatternArguments gPatternsAndArguments[] = {
  
  
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
-
 
 void setup() {
   
@@ -98,21 +107,21 @@ void loop () {
   uint8_t arg2 = gPatternsAndArguments[gCurrentPatternNumber].mArg2;
   AnimationPattern animate = gPatternsAndArguments[gCurrentPatternNumber].mPattern;
   
-  animate(arg1, arg2);
-  
-  // TODO add dynamicDelay  for twinkle and applause
-  
-  // TODO ripple has some weird flickering
+  uint8_t animDelay = animate(arg1, arg2);
   
   gHue++;
 
-  delay_at_max_brightness_for_power(staticDelay ? 125 : random8(1,100) * 2.5);
+  // Try lower delays for sinelon & juggle
+  if (animDelay != NO_DELAY) {
+    delay_at_max_brightness_for_power(animDelay != RANDOM_DELAY ? 125 : random8(1,100) * 2.5);
+  }
+    
   show_at_max_brightness_for_power();                         // Power managed display of LED's.
 } 
 
  
 
-void juggle(uint8_t numDots, uint8_t baseBpmSpeed) {
+uint8_t juggle(uint8_t numDots, uint8_t baseBpmSpeed) {
    // numDots colored dots, weaving in and out of sync with each other
   fadeToBlackBy(leds, NUM_LEDS, 100);
   byte dothue = 0;
@@ -120,10 +129,12 @@ void juggle(uint8_t numDots, uint8_t baseBpmSpeed) {
     leds[beatsin16(i+baseBpmSpeed, 0, NUM_LEDS)] |= CHSV(dothue, 255, 224);
     dothue += (256 / numDots);
   }
+  
+  return STATIC_DELAY;
 }
  
 
-void bpm(uint8_t bpmSpeed, uint8_t stripeWidth)
+uint8_t bpm(uint8_t bpmSpeed, uint8_t stripeWidth)
 {
   // colored stripes pulsing at a defined Beats-Per-Minute (BPM)
   CRGBPalette16 palette = PartyColors_p;
@@ -131,37 +142,47 @@ void bpm(uint8_t bpmSpeed, uint8_t stripeWidth)
   for( int i = 0; i < NUM_LEDS; i++) {
     leds[i] = ColorFromPalette(palette, gHue+(i*stripeWidth), beat);
   }
+  
+  return NO_DELAY;
+
 }
 
-void sinelon(uint8_t bpmSpeed, uint8_t fadeAmount)
+uint8_t sinelon(uint8_t bpmSpeed, uint8_t fadeAmount)
 {
   // a colored dot sweeping back and forth, with fading trails
   fadeToBlackBy(leds, NUM_LEDS, fadeAmount);
   int pos = beatsin16(bpmSpeed, 0, NUM_LEDS);
   leds[pos] += CHSV(gHue, 255, 192);
+  
+  return STATIC_DELAY;
 }
 
 // An animation to play while the crowd goes wild after the big performance
-void applause(uint8_t minHue, uint8_t maxHue)
+uint8_t applause(uint8_t minHue, uint8_t maxHue)
 {
   static uint16_t lastPixel = 0;
   fadeToBlackBy(leds, NUM_LEDS, 32);
   leds[lastPixel] = CHSV(random8(minHue, maxHue), 255, 255);
   lastPixel = random16(NUM_LEDS);
   leds[lastPixel] = CRGB::White;
+  
+  return RANDOM_DELAY;
 }
 
-void confetti(uint8_t colorVariation, uint8_t fadeAmount)
+uint8_t confetti(uint8_t colorVariation, uint8_t fadeAmount)
 {
   // random colored speckles that blink in and fade smoothly
   fadeToBlackBy(leds, NUM_LEDS, fadeAmount);
   int pos = random16(NUM_LEDS);
   leds[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
+  
+  return RANDOM_DELAY; 
+  
 }
 
 // @param chanceOfTwinkle  The higher the number, lowers the chance for a pixel to light up. (50)
 // by @atuline
-void twinkle(uint8_t chanceOfTwinkle, uint8_t fadeRate) {
+uint8_t twinkle(uint8_t chanceOfTwinkle, uint8_t fadeRate) {
   if (chanceOfTwinkle > NUM_LEDS) chanceOfTwinkle = NUM_LEDS;               // Make sure we're at least utilizing ALL the LED's.
   int index = random16(0, chanceOfTwinkle);
   if (index < NUM_LEDS) {                                      // Only the lowest probability twinkles will do.
@@ -169,13 +190,15 @@ void twinkle(uint8_t chanceOfTwinkle, uint8_t fadeRate) {
   }
   for (int i = 0; i < NUM_LEDS; i++) 
     leds[i].nscale8(fadeRate); // Go through the array and reduce each RGB value by a percentage.
+    
+  return RANDOM_DELAY;
 } 
 
 
 
 // Ripple (inspired by @atuline)
 // Ripple effect with trailing dots (alternatively), color randomized for each ripple
-void ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
+uint8_t ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
 
   static int step = -1; 
   static int center = 0;  // Center of the current ripple      
@@ -218,6 +241,8 @@ void ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
     // Ending the ripple
     step = -1;
   }
+  
+  return STATIC_DELAY;
 } 
  
 // Wrap around the strip
