@@ -22,8 +22,6 @@ OneButton button(BUTTON_PIN, true);
 
 // Animations
 uint8_t gHue = 0; 
-
-// Ripple animation
 #define RIPPLE_FADE_RATE 255
 
 typedef void (*AnimationPattern)(uint8_t arg1, uint8_t arg2);
@@ -34,24 +32,23 @@ typedef struct {
 } AnimationPatternArguments;
  
 AnimationPatternArguments gPatternsAndArguments[] = {
-  // TODO Ripple should be at [up to] 40
-  {ripple,  20,  192},
+  {ripple,  40,  192},
  
-  {juggle, 2, 4},
-  {juggle, 3, 7},
-  {juggle, 8, 13},
+  {juggle,   2, 4},
+  {juggle,   3, 7},
+  {juggle,   8, 13},
   
-  {sinelon,  7 /*BPM*/, 1 /*fadeAmount*/ },
-  {sinelon, 13 /*BPM*/, 10 /*fadeAmount*/ },
+  {sinelon,  7, 1},
+  {sinelon,  13, 10},
   
-  {applause,     HUE_BLUE /*BPM*/, HUE_PURPLE /*stripeWidth*/},
-  {applause,    HUE_BLUE /*BPM*/, HUE_RED /*stripeWidth*/},
+  {applause, HUE_BLUE, HUE_PURPLE},
+  {applause, HUE_BLUE, HUE_RED},
   
-  {twinkle,     15 /*BPM*/, 100 /*stripeWidth*/},
-  {twinkle, 50 /*colorVariation*/, 224/*fadeAmount*/},
+  {twinkle,  15, 100},
+  {twinkle,  50, 224},
   
-  {confetti,   20, 10},
-  {confetti, 16 /*colorVariation*/,  3/*fadeAmount*/},
+  {confetti, 20, 10},
+  {confetti, 16,  3},
   
   {bpm,     62 /*BPM*/, 3 /*stripeWidth*/},
   {bpm,    125 /*BPM*/, 7 /*stripeWidth*/},
@@ -183,6 +180,7 @@ void ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
   static int center = 0;  // Center of the current ripple      
   static uint8_t color; // Ripple colour
   static boolean trailingDots; // whether to add trailing dots to the ripple
+  static int maxSteps;
   
   fadeToBlackBy(leds, NUM_LEDS, fadeToBlackRate);
   
@@ -191,6 +189,7 @@ void ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
     // Initalizing ripple 
     center = random(NUM_LEDS); 
     color = random16(0, 256);
+    maxSteps =  random(rippleSize / 2, rippleSize); // Randomize ripple size
     trailingDots = random(0, 2) % 2;
     step = 0;
     
@@ -200,13 +199,13 @@ void ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
     leds[center] = CHSV(color, 255, 255);
     step++;
     
-  } else if (step < rippleSize) {
+  } else if (step < maxSteps) {
     
     // In the Ripple
     uint8_t fading = RIPPLE_FADE_RATE/step * 2;
     leds[wrap(center + step)] += CHSV(color, 255, fading);   // Display the next pixels in the range for one side.
     leds[wrap(center - step)] += CHSV(color, 255, fading);   // Display the next pixels in the range for the other side.
-    step ++;
+    step++;
     
     if (trailingDots && step > 3) {
       // Add trailing dots
