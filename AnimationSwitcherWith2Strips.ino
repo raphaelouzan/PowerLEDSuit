@@ -12,7 +12,9 @@ A lot of the code hsa been based on the work of Mark Kriegsman (FastLED)
 
 // LEDs
 #define NUM_LEDS        60                                    // Number of LED's.
-#define MAX_BRIGTHTNESS 60                                   // Overall brightness definition. It can be changed on the fly.
+#define LED_1           9
+#define LED_2           6
+#define MAX_BRIGTHTNESS 230                                   // Overall brightness definition. It can be changed on the fly.
 struct CRGB leds[NUM_LEDS];                                   // Initialize our LED array.
 
 // Switcher
@@ -66,8 +68,8 @@ void setup() {
   Serial.begin(57600);
 
   // LEDs
-  FastLED.addLeds<NEOPIXEL, 9>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.addLeds<NEOPIXEL, 6>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<NEOPIXEL, LED_1>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<NEOPIXEL, LED_2>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   FastLED.setBrightness(MAX_BRIGTHTNESS);
   set_max_power_in_volts_and_milliamps(5, 500);               // FastLED power management set at 5V, 500mA.
   
@@ -77,7 +79,7 @@ void setup() {
 } 
 
 void onClick() { 
-  const int numberOfPatterns = sizeof(gPatternsAndArguments) / sizeof( gPatternsAndArguments[0]);  
+  static const int numberOfPatterns = sizeof(gPatternsAndArguments) / sizeof(gPatternsAndArguments[0]);  
   gCurrentPatternNumber = (gCurrentPatternNumber+1) % numberOfPatterns;
 }   
 
@@ -94,9 +96,9 @@ void loop () {
   
   uint8_t arg1 = gPatternsAndArguments[gCurrentPatternNumber].mArg1;
   uint8_t arg2 = gPatternsAndArguments[gCurrentPatternNumber].mArg2;
-  AnimationPattern pat = gPatternsAndArguments[gCurrentPatternNumber].mPattern;
+  AnimationPattern animate = gPatternsAndArguments[gCurrentPatternNumber].mPattern;
   
-  pat(arg1, arg2);
+  animate(arg1, arg2);
   
   // TODO add dynamicDelay  for twinkle and applause
   
@@ -104,7 +106,7 @@ void loop () {
   
   gHue++;
 
-  delay_at_max_brightness_for_power(staticDelay ? 125 : random8(1,100)*2.5);
+  delay_at_max_brightness_for_power(staticDelay ? 125 : random8(1,100) * 2.5);
   show_at_max_brightness_for_power();                         // Power managed display of LED's.
 } 
 
@@ -173,7 +175,6 @@ void twinkle(uint8_t chanceOfTwinkle, uint8_t fadeRate) {
 
 // Ripple (inspired by @atuline)
 // Ripple effect with trailing dots (alternatively), color randomized for each ripple
-// TODO randomize max ripple size with random8(16,40)
 void ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
 
   static int step = -1; 
