@@ -13,11 +13,14 @@ A lot of the code was based on the work of Mark Kriegsman (FastLED)
 #include "Adafruit_TCS34725.h"
 
 // LEDs
-#define NUM_LEDS        60                                    // Number of LED's.
+// Size of the strip, including both front and back of the strip
+#define STRIP_SIZE      60
+// Number of LEDs for the front side of the suit (will be mirrored on what's left of the strip in the back)
+#define NUM_LEDS        30                                    
 #define LED_1           9
 #define LED_2           6
-#define MAX_BRIGTHTNESS 160                                   // Overall brightness definition. It can be changed on the fly.
-struct CRGB leds[NUM_LEDS];                                   // Initialize our LED array.
+#define MAX_BRIGTHTNESS 100                                   // Overall brightness definition. It can be changed on the fly.
+struct CRGB leds[STRIP_SIZE];                                   // Initialize our LED array.
 
 // Switcher
 #define BUTTON_PIN 12
@@ -86,8 +89,8 @@ void setup() {
   Serial.begin(57600);
 
   // LEDs
-  FastLED.addLeds<NEOPIXEL, LED_1>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.addLeds<NEOPIXEL, LED_2>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<NEOPIXEL, LED_1>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<NEOPIXEL, LED_2>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
   FastLED.setBrightness(MAX_BRIGTHTNESS);
   set_max_power_in_volts_and_milliamps(5, 500);               // FastLED power management set at 5V, 500mA.
   
@@ -140,13 +143,24 @@ void loop () {
   
   gHue++;
 
+  mirrorLeds();
+  
   // Try lower delays for sinelon & juggle
   if (animDelay != NO_DELAY) {
     delay_at_max_brightness_for_power(animDelay != RANDOM_DELAY ? 70 : random8(1,100) * 2.5);
   }
     
   show_at_max_brightness_for_power();                         // Power managed display of LED's.
+  
 } 
+
+void mirrorLeds() { 
+
+  for (int i = STRIP_SIZE-1, x = 0; i > NUM_LEDS; i--, x++) { 
+    leds[i] = leds[x];
+  }
+  
+}
 
  
 
@@ -243,7 +257,7 @@ uint8_t ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
     // Initalizing ripple 
     center = random(NUM_LEDS); 
     color = gHue;
-    maxSteps =  random(rippleSize / 2, rippleSize); // Randomize ripple size
+    maxSteps =  min(random(rippleSize / 2, rippleSize), NUM_LEDS); // Randomize ripple size
     trailingDots = random(0, 2) % 2;
     step = 0;
     

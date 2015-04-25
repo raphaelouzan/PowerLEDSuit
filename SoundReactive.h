@@ -18,6 +18,7 @@ int
   minLvlAvg = 0,                                              // For dynamic adjustment of graph low & high
   maxLvlAvg = 512;
   
+// TODO Try blue/red kind of palette or LavaColors_p 
 CRGBPalette16 currentPalette = PartyColors_p;
 
 uint8_t soundAnimate(uint8_t fakeNoise, uint8_t fakeTop) {
