@@ -16,7 +16,7 @@ A lot of the code was based on the work of Mark Kriegsman (FastLED)
 #define NUM_LEDS        60                                    // Number of LED's.
 #define LED_1           9
 #define LED_2           6
-#define MAX_BRIGTHTNESS 230                                   // Overall brightness definition. It can be changed on the fly.
+#define MAX_BRIGTHTNESS 160                                   // Overall brightness definition. It can be changed on the fly.
 struct CRGB leds[NUM_LEDS];                                   // Initialize our LED array.
 
 // Switcher
@@ -51,14 +51,15 @@ typedef struct {
  
 AnimationPatternArguments gPatternsAndArguments[] = {
   {soundAnimate, 5, 5},
-  {ripple,  40,  50},
+  
+  {ripple,  60,  50},
  
+  {sinelon,  7, 32},
+  {sinelon,  7, 4},
+  
   {juggle,   2, 4},
   {juggle,   3, 7},
-  {juggle,   4, 13},
-  
-  {sinelon,  7, 4},
-  {sinelon,  13, 10},
+  {juggle,   4, 8},
   
   {applause, HUE_BLUE, HUE_PURPLE},
   {applause, HUE_BLUE, HUE_RED},
@@ -218,6 +219,7 @@ uint8_t twinkle(uint8_t chanceOfTwinkle, uint8_t fadeRate) {
 
 // Ripple (inspired by @atuline)
 // Ripple effect with trailing dots (alternatively), color randomized for each ripple
+// TODO Ripples should be spaced out by some sinus function instead of a static delay to make it feel more organic
 uint8_t ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
 
   static int step = -1; 
@@ -232,7 +234,7 @@ uint8_t ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
     
     // Initalizing ripple 
     center = random(NUM_LEDS); 
-    color = random16(0, 256);
+    color = gHue;
     maxSteps =  random(rippleSize / 2, rippleSize); // Randomize ripple size
     trailingDots = random(0, 2) % 2;
     step = 0;
@@ -247,14 +249,14 @@ uint8_t ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
     
     // In the Ripple
     uint8_t fading = RIPPLE_FADE_RATE/step * 2;
-    leds[wrap(center + step)] += CHSV(color, 255, fading);   // Display the next pixels in the range for one side.
-    leds[wrap(center - step)] += CHSV(color, 255, fading);   // Display the next pixels in the range for the other side.
+    leds[wrap(center + step)] += CHSV(color+step, 255, fading);   // Display the next pixels in the range for one side.
+    leds[wrap(center - step)] += CHSV(color-step, 255, fading);   // Display the next pixels in the range for the other side.
     step++;
     
     if (trailingDots && step > 3) {
       // Add trailing dots
-      leds[wrap(center + step - 3)] = CHSV(color, 255, fading);     
-      leds[wrap(center - step + 3)] = CHSV(color, 255, fading);   
+      leds[wrap(center + step - 3)] = CHSV(color-step, 255, fading);     
+      leds[wrap(center - step + 3)] = CHSV(color+step, 255, fading);   
     }
     
   } else { 
