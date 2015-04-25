@@ -4,11 +4,13 @@ Double click resets the progression.
 
 Using FastLED 3 and 2 LED Strips. 
 
-A lot of the code hsa been based on the work of Mark Kriegsman (FastLED) 
+A lot of the code was based on the work of Mark Kriegsman (FastLED) 
 */
 
 #include <FastLED.h>                                          
 #include <OneButton.h>
+#include <Wire.h>
+#include "Adafruit_TCS34725.h"
 
 // LEDs
 #define NUM_LEDS        60                                    // Number of LED's.
@@ -21,6 +23,10 @@ struct CRGB leds[NUM_LEDS];                                   // Initialize our 
 #define BUTTON_PIN 12
 OneButton button(BUTTON_PIN, true);
 
+// Color Sensor
+#include "ColorSensor.h"
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_4X);
+
 // Animations
 uint8_t gHue = 0; 
 
@@ -29,11 +35,13 @@ uint8_t gHue = 0;
 #define NO_DELAY      1
 
 // Microphone
+// TODO "SoundReactive shouldn't rely on the delay #defines 
 #define MIC_PIN A10
 #include "SoundReactive.h"
 
 #define RIPPLE_FADE_RATE 255
 
+// Animation Sequencing 
 typedef uint8_t (*AnimationPattern)(uint8_t arg1, uint8_t arg2);
 typedef struct { 
   AnimationPattern mPattern;
@@ -66,7 +74,6 @@ AnimationPatternArguments gPatternsAndArguments[] = {
   {bpm,      15,  1}
 };
  
- 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 
 void setup() {
@@ -84,6 +91,16 @@ void setup() {
   // Button
   button.attachClick(onClick);
   button.attachDoubleClick(onDoubleClick); 
+  button.attachLongPressStart(onLongPress);
+  
+  // Color Sensor
+  loadGammaTable();
+  if (tcs.begin()) {
+    Serial.println("Found sensor");
+    tcs.setInterrupt(true); // turn LED off
+  } else {
+    Serial.println("No TCS34725 found ... check your connections");
+  }
 } 
 
 void onClick() { 
@@ -93,6 +110,10 @@ void onClick() {
 
 void onDoubleClick() { 
   gCurrentPatternNumber = 0; 
+}
+
+void onLongPress() { 
+  sampleColor();  
 }
 
 void loop () {
@@ -112,7 +133,7 @@ void loop () {
 
   // Try lower delays for sinelon & juggle
   if (animDelay != NO_DELAY) {
-    delay_at_max_brightness_for_power(animDelay != RANDOM_DELAY ? 125 : random8(1,100) * 2.5);
+    delay_at_max_brightness_for_power(animDelay != RANDOM_DELAY ? 70 : random8(1,100) * 2.5);
   }
     
   show_at_max_brightness_for_power();                         // Power managed display of LED's.
@@ -153,7 +174,7 @@ uint8_t sinelon(uint8_t bpmSpeed, uint8_t fadeAmount)
   int pos = beatsin16(bpmSpeed, 0, NUM_LEDS);
   leds[pos] += CHSV(gHue, 255, 192);
   
-  return STATIC_DELAY;
+  return NO_DELAY;
 }
 
 // An animation to play while the crowd goes wild after the big performance
@@ -249,5 +270,46 @@ int wrap(int step) {
   if(step < 0) return NUM_LEDS + step;
   if(step > NUM_LEDS - 1) return step - NUM_LEDS;
   return step;
+}
+
+void sampleColor() { 
+  uint16_t clear, red, green, blue;
+
+  tcs.setInterrupt(false);      // turn on LED
+
+  delay(700);  // takes 50ms to read 
+  
+  tcs.getRawData(&red, &green, &blue, &clear);
+
+  tcs.setInterrupt(true);  // turn off LED
+  
+  Serial.print("C:\t"); Serial.print(clear);
+  Serial.print("\tR:\t"); Serial.print(red);
+  Serial.print("\tG:\t"); Serial.print(green);
+  Serial.print("\tB:\t"); Serial.print(blue);
+
+  // Figure out some basic hex code for visualization
+  uint32_t sum = red;
+  sum += green;
+  sum += blue;
+  sum += clear;
+  float r, g, b;
+  r = red; r /= sum;
+  g = green; g /= sum;
+  b = blue; b /= sum;
+  r *= 256; g *= 256; b *= 256;
+  Serial.print("\t");
+  Serial.print((int)r, HEX); Serial.print((int)g, HEX); Serial.print((int)b, HEX);
+  Serial.println();
+
+  Serial.print((int)r ); Serial.print(" "); Serial.print((int)g);Serial.print(" ");  Serial.println((int)b );
+
+  // TODO Cool animation  
+  fill_solid(leds, NUM_LEDS, CRGB((int)r, (int)g, (int)b)) ;
+  show_at_max_brightness_for_power();                         // Power managed display of LED's.
+  
+  delay(5000);
+
+  Serial.println("Done with color sensing");
 }
 
