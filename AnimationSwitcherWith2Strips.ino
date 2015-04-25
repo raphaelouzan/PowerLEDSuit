@@ -2,7 +2,7 @@
 Switching between a progression of animations by clicking a button. 
 Double click resets the progression. 
 
-Using FastLED 2.1 and 2 LED Strips. 
+Using FastLED 3 and 2 LED Strips. 
 
 A lot of the code hsa been based on the work of Mark Kriegsman (FastLED) 
 */
@@ -19,7 +19,6 @@ struct CRGB leds[NUM_LEDS];                                   // Initialize our 
 
 // Switcher
 #define BUTTON_PIN 12
-int state = 0, maxStates = 8;
 OneButton button(BUTTON_PIN, true);
 
 // Animations
