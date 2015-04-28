@@ -18,9 +18,11 @@ int
   minLvlAvg = 0,                                              // For dynamic adjustment of graph low & high
   maxLvlAvg = 512;
   
-// TODO Try blue/red kind of palette or LavaColors_p 
-CRGBPalette16 currentPalette = PartyColors_p;
+// TODO probably better use RainbowColors_p;
+CRGBPalette16 currentPalette = PartyColors_p; 
 
+// TODO diming should be much easier on the eye
+// TODO Avoid flickering on the ey
 uint8_t soundAnimate(uint8_t fakeNoise, uint8_t fakeTop) {
 
   static uint8_t startIndex = 0;

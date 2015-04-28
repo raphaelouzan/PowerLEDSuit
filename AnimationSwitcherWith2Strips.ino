@@ -19,7 +19,7 @@ A lot of the code was based on the work of Mark Kriegsman (FastLED)
 #define NUM_LEDS        30                                    
 #define LED_1           9
 #define LED_2           6
-#define MAX_BRIGTHTNESS 100                                   // Overall brightness definition. It can be changed on the fly.
+#define MAX_BRIGTHTNESS 80                                   // Overall brightness definition. It can be changed on the fly.
 struct CRGB leds[STRIP_SIZE];                                   // Initialize our LED array.
 
 // Switcher
@@ -54,7 +54,13 @@ typedef struct {
   uint8_t mArg2;
 } AnimationPatternArguments;
  
+ 
+
 AnimationPatternArguments gPatternsAndArguments[] = {
+// TODO breathing animation (intensity ramp with the blue/red colors)
+
+  {sinus, 5, 4},
+
   {soundAnimate, 5, 5},
   
   {ripple,  60,  50},
@@ -66,6 +72,7 @@ AnimationPatternArguments gPatternsAndArguments[] = {
   {juggle,   3, 7},
   {juggle,   4, 8},
   
+  // TODO applause is way too fast, could be extremely slow
   {applause, HUE_BLUE, HUE_PURPLE},
   {applause, HUE_BLUE, HUE_RED},
   
@@ -82,6 +89,8 @@ AnimationPatternArguments gPatternsAndArguments[] = {
  
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 
+
+
 void setup() {
   
   delay(2000);                                                // Power-up safety delay or something like that.
@@ -89,8 +98,16 @@ void setup() {
   Serial.begin(57600);
 
   // LEDs
-  FastLED.addLeds<NEOPIXEL, LED_1>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
+  
+
   FastLED.addLeds<NEOPIXEL, LED_2>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
+#if defined(USE_RING)
+  FastLED.addLeds<NEOPIXEL, LED_1>(leds, 24);
+#else
+  FastLED.addLeds<NEOPIXEL, LED_1>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
+#endif
+
+
   FastLED.setBrightness(MAX_BRIGTHTNESS);
   set_max_power_in_volts_and_milliamps(5, 500);               // FastLED power management set at 5V, 500mA.
   
@@ -123,9 +140,42 @@ void onDoubleClick() {
 }
 
 void onLongPress() { 
+  // TODO change palette
 #if defined(USE_COLOR_SENSOR)
   sampleColor();  
 #endif
+}
+
+uint8_t beatsin8x( accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, int type = 0, int offset = 0)
+{
+    uint8_t beat = beat8(beats_per_minute);
+    beat += offset;
+    uint8_t beatsin = 0;
+    switch(type) { 
+      case 0: beatsin = ease8InOutQuad(beat); break;
+      case 1: beatsin = triwave8(beat); break;
+      case 2: beatsin = ease8InOutCubic(beat); break;
+      case 3: beatsin = cubicwave8(beat + 30); break;
+      case 4: beatsin = ease8InOutApprox(beat); break;
+    }
+    
+    uint8_t rangewidth = highest - lowest;
+    uint8_t scaledbeat = scale8(beatsin, rangewidth);
+    uint8_t result = lowest + scaledbeat;
+    return result;
+}
+
+
+uint8_t sinus(uint8_t bpmSpeed, uint8_t fadeAmount) { 
+
+  
+  for (int i = 0; i < NUM_LEDS; i++) { 
+    int val = beatsin8x(bpmSpeed, 0, 200, 3);  
+    leds[i] = CHSV(HUE_BLUE, 255, val);
+  }
+ 
+
+  return NO_DELAY;
 }
 
 void loop () {
@@ -145,7 +195,7 @@ void loop () {
 
   mirrorLeds();
   
-  // Try lower delays for sinelon & juggle
+  // TODO Try lower delays for juggle
   if (animDelay != NO_DELAY) {
     delay_at_max_brightness_for_power(animDelay != RANDOM_DELAY ? 70 : random8(1,100) * 2.5);
   }
