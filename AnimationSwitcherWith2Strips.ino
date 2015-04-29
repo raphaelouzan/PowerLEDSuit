@@ -12,48 +12,66 @@ A lot of the code was based on the work of Mark Kriegsman (FastLED)
 #include <Wire.h>
 #include "Adafruit_TCS34725.h"
 
-// LEDs
+/** 
+ * LEDS
+ */
 // Size of the strip, including both front and back of the strip
 #define STRIP_SIZE      60
 // Number of LEDs for the front side of the suit (will be mirrored on what's left of the strip in the back)
 #define NUM_LEDS        30                                    
 #define LED_1           9
 #define LED_2           6
+// USE_RING = 1 when using a 24 pixels neopixel ring (to LED_1) and both strips are connected to LED_2
+#define USE_RING        1
+#define RING_SIZE       24
+
 #define MAX_BRIGTHTNESS 80                                   // Overall brightness definition. It can be changed on the fly.
+
 struct CRGB leds[STRIP_SIZE];                                   // Initialize our LED array.
 
-// Switcher
+/** 
+ * Button Switcher
+ */ 
 #define BUTTON_PIN 12
 OneButton button(BUTTON_PIN, true);
 
-// Color Sensor
+/** 
+ * Color Sensor 
+ */ 
 #if defined(USE_COLOR_SENSOR)
 #include "ColorSensor.h"
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_4X);
 #endif 
 
-// Animations
+/** 
+ * Animations
+ */ 
 uint8_t gHue = 0; 
 
-#define RANDOM_DELAY  2
-#define STATIC_DELAY  3 
-#define NO_DELAY      1
-
-// Microphone
-// TODO "SoundReactive shouldn't rely on the delay #defines 
-#define MIC_PIN A10
-#include "SoundReactive.h"
+typedef enum delayType {
+RANDOM_DELAY = 2,
+STATIC_DELAY = 3, 
+NO_DELAY     = 1
+} delayType;
 
 #define RIPPLE_FADE_RATE 255
 
-// Animation Sequencing 
+/**
+ * Microphone
+ */
+#define MIC_PIN A10
+#include "SoundReactive.h"
+
+
+/**
+ * Sequencing
+ */
 typedef uint8_t (*AnimationPattern)(uint8_t arg1, uint8_t arg2);
 typedef struct { 
   AnimationPattern mPattern;
   uint8_t mArg1;
   uint8_t mArg2;
 } AnimationPatternArguments;
- 
  
 
 AnimationPatternArguments gPatternsAndArguments[] = {
@@ -90,7 +108,9 @@ AnimationPatternArguments gPatternsAndArguments[] = {
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 
 
-
+/**
+ * Setup
+ */ 
 void setup() {
   
   delay(2000);                                                // Power-up safety delay or something like that.
@@ -99,14 +119,12 @@ void setup() {
 
   // LEDs
   
-
   FastLED.addLeds<NEOPIXEL, LED_2>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
-#if defined(USE_RING)
-  FastLED.addLeds<NEOPIXEL, LED_1>(leds, 24);
+#if USE_RING
+  FastLED.addLeds<NEOPIXEL, LED_1>(leds, RING_SIZE);
 #else
   FastLED.addLeds<NEOPIXEL, LED_1>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
 #endif
-
 
   FastLED.setBrightness(MAX_BRIGTHTNESS);
   set_max_power_in_volts_and_milliamps(5, 500);               // FastLED power management set at 5V, 500mA.
@@ -130,6 +148,10 @@ void setup() {
 
 } 
 
+/**
+ * Click Handlers
+ */
+
 void onClick() { 
   static const int numberOfPatterns = sizeof(gPatternsAndArguments) / sizeof(gPatternsAndArguments[0]);  
   gCurrentPatternNumber = (gCurrentPatternNumber+1) % numberOfPatterns;
@@ -146,38 +168,10 @@ void onLongPress() {
 #endif
 }
 
-uint8_t beatsin8x( accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, int type = 0, int offset = 0)
-{
-    uint8_t beat = beat8(beats_per_minute);
-    beat += offset;
-    uint8_t beatsin = 0;
-    switch(type) { 
-      case 0: beatsin = ease8InOutQuad(beat); break;
-      case 1: beatsin = triwave8(beat); break;
-      case 2: beatsin = ease8InOutCubic(beat); break;
-      case 3: beatsin = cubicwave8(beat + 30); break;
-      case 4: beatsin = ease8InOutApprox(beat); break;
-    }
-    
-    uint8_t rangewidth = highest - lowest;
-    uint8_t scaledbeat = scale8(beatsin, rangewidth);
-    uint8_t result = lowest + scaledbeat;
-    return result;
-}
 
-
-uint8_t sinus(uint8_t bpmSpeed, uint8_t fadeAmount) { 
-
-  
-  for (int i = 0; i < NUM_LEDS; i++) { 
-    int val = beatsin8x(bpmSpeed, 0, 200, 3);  
-    leds[i] = CHSV(HUE_BLUE, 255, val);
-  }
- 
-
-  return NO_DELAY;
-}
-
+/** 
+ * Loop and led management
+ */ 
 void loop () {
   random16_add_entropy(random());
   
@@ -197,7 +191,7 @@ void loop () {
   
   // TODO Try lower delays for juggle
   if (animDelay != NO_DELAY) {
-    delay_at_max_brightness_for_power(animDelay != RANDOM_DELAY ? 70 : random8(1,100) * 2.5);
+    delay_at_max_brightness_for_power(animDelay != RANDOM_DELAY ? 70 : random8(10,100) * 2.5);
   }
     
   show_at_max_brightness_for_power();                         // Power managed display of LED's.
@@ -212,7 +206,10 @@ void mirrorLeds() {
   
 }
 
- 
+
+/**
+ * Animations
+ */ 
 
 uint8_t juggle(uint8_t numDots, uint8_t baseBpmSpeed) {
    // numDots colored dots, weaving in and out of sync with each other
