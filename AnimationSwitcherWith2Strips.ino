@@ -67,10 +67,10 @@ typedef struct {
  
 
 AnimationPatternArguments gPatternsAndArguments[] = {
-
-  // TODO breathing animation (intensity ramp with the blue/red colors)
-
-  {sinus, 5, 4},
+  
+  {breathing, 5, 4},
+  {breathing2, 5000, 0},
+  {breathing2, 10000, 0},
 
   {soundAnimate, 5, 5},
   
@@ -83,7 +83,7 @@ AnimationPatternArguments gPatternsAndArguments[] = {
   {juggle,   3, 7},
   {juggle,   4, 8},
   
-  // TODO applause is way too fast, could be extremely slow
+  // TODO applause became way too fast when 2 leds on same pin
   {applause, HUE_BLUE, HUE_PURPLE},
   {applause, HUE_BLUE, HUE_RED},
   
@@ -111,7 +111,6 @@ void setup() {
   Serial.begin(57600);
 
   // LEDs
-  
   FastLED.addLeds<NEOPIXEL, LED_2>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
 #if USE_RING
   FastLED.addLeds<NEOPIXEL, LED_1>(leds, RING_SIZE);
@@ -193,6 +192,7 @@ void loop () {
 
 void mirrorLeds() { 
 
+  // TODO Left a pixel off in the middle on purpose. should be removed after set up
   for (int i = STRIP_SIZE-1, x = 0; i > NUM_LEDS; i--, x++) { 
     leds[i] = leds[x];
   }

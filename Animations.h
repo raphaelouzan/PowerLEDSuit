@@ -145,7 +145,7 @@ uint8_t ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
   return STATIC_DELAY;
 } 
 
-uint8_t beatsin8x( accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, int type = 0, int offset = 0)
+uint8_t beatQuad8x(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, int type = 0, int offset = 0)
 {
     uint8_t beat = beat8(beats_per_minute);
     beat += offset;
@@ -154,7 +154,7 @@ uint8_t beatsin8x( accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest
       case 0: beatsin = ease8InOutQuad(beat); break;
       case 1: beatsin = triwave8(beat); break;
       case 2: beatsin = ease8InOutCubic(beat); break;
-      case 3: beatsin = cubicwave8(beat + 30); break;
+      case 3: beatsin = cubicwave8(beat); break;
       case 4: beatsin = ease8InOutApprox(beat); break;
     }
     
@@ -165,15 +165,54 @@ uint8_t beatsin8x( accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest
 }
 
 
-uint8_t sinus(uint8_t bpmSpeed, uint8_t fadeAmount) { 
+void breath();
 
+uint8_t breathing(uint8_t bpmSpeed, uint8_t fadeAmount) { 
   
   for (int i = 0; i < NUM_LEDS; i++) { 
-    int val = beatsin8x(bpmSpeed, 0, 200, 3);  
+    int val = beatQuad8x(bpmSpeed, 0, 200, 3);  
     leds[i] = CHSV(HUE_BLUE, 255, val);
   }
- 
+  
+  return NO_DELAY; 
+}
 
+
+const uint8_t KEYFRAMES[]  = {
+  // Rising
+  20, 21, 22, 24, 26, 28, 31, 34, 38, 41, 45, 50, 55, 60, 66, 73, 80, 87, 95,
+  103, 112, 121, 131, 141, 151, 161, 172, 182, 192, 202, 211, 220, 228, 236,
+  242, 247, 251, 254, 255,
+
+  // Falling
+  254, 251, 247, 242, 236, 228, 220, 211, 202, 192, 182, 172, 161, 151, 141,
+  131, 121, 112, 103, 95, 87, 80, 73, 66, 60, 55, 50, 45, 41, 38, 34, 31, 28,
+  26, 24, 22, 21, 20,
+  20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 
+};
+
+unsigned long lastBreath = 0.0;
+int keyframePointer = 0;
+
+uint8_t breathing2(uint8_t breathingCycleTime = 5000, uint8_t baseColorFake = 0) {
+  int numKeyframes = sizeof(KEYFRAMES) - 1;
+  float period = breathingCycleTime / numKeyframes;
+  unsigned long now = millis();
+  
+  if ((now - lastBreath) > period) {
+    lastBreath = now;
+
+    for (int i = 0; i < NUM_LEDS; i++) {
+      uint8_t color = (127 * KEYFRAMES[keyframePointer]) / 256;
+      leds[i] = color;
+    } 
+
+    // Increment the keyframe pointer.
+    if (++keyframePointer > numKeyframes) {
+      // Reset to 0 after the last keyframe.
+      keyframePointer = 0;
+    }   
+  }
   return NO_DELAY;
 }
 
