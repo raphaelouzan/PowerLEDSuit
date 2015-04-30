@@ -213,6 +213,6 @@ uint8_t breathing2(uint8_t breathingCycleTime = 5000, uint8_t baseColorFake = 0)
       keyframePointer = 0;
     }   
   }
-  return NO_DELAY;
+  return STATIC_DELAY;
 }
 

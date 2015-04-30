@@ -66,11 +66,10 @@ typedef struct {
 } AnimationPatternArguments;
  
 
-AnimationPatternArguments gPatternsAndArguments[] = {
+AnimationPatternArguments gAnimations[] = {
   
   {breathing, 5, 4},
-  {breathing2, 5000, 0},
-  {breathing2, 10000, 0},
+  {breathing2, 40000, 0},
 
   {soundAnimate, 5, 5},
   
@@ -145,7 +144,7 @@ void setup() {
  */
 
 void onClick() { 
-  static const int numberOfPatterns = sizeof(gPatternsAndArguments) / sizeof(gPatternsAndArguments[0]);  
+  static const int numberOfPatterns = sizeof(gAnimations) / sizeof(gAnimations[0]);  
   gCurrentPatternNumber = (gCurrentPatternNumber+1) % numberOfPatterns;
 }   
 
@@ -171,9 +170,9 @@ void loop () {
   
   boolean staticDelay = true;
   
-  uint8_t arg1 = gPatternsAndArguments[gCurrentPatternNumber].mArg1;
-  uint8_t arg2 = gPatternsAndArguments[gCurrentPatternNumber].mArg2;
-  AnimationPattern animate = gPatternsAndArguments[gCurrentPatternNumber].mPattern;
+  uint8_t arg1 = gAnimations[gCurrentPatternNumber].mArg1;
+  uint8_t arg2 = gAnimations[gCurrentPatternNumber].mArg2;
+  AnimationPattern animate = gAnimations[gCurrentPatternNumber].mPattern;
   
   uint8_t animDelay = animate(arg1, arg2);
   
