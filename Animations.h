@@ -12,8 +12,6 @@ NO_DELAY     = 1
 uint8_t gHue = 0;
 
 
-
-
 uint8_t juggle(uint8_t numDots, uint8_t baseBpmSpeed) {
    // numDots colored dots, weaving in and out of sync with each other
   fadeToBlackBy(leds, NUM_LEDS, 100);
@@ -145,6 +143,54 @@ uint8_t ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
   return STATIC_DELAY;
 } 
 
+uint8_t ripple2(uint8_t rippleSize, uint8_t fadeToBlackRate) {
+
+  static int step = -1; 
+  static int center = 0;  // Center of the current ripple      
+  static uint8_t color; // Ripple colour
+  static boolean trailingDots; // whether to add trailing dots to the ripple
+  static int maxSteps;
+  
+//  fadeToBlackBy(leds, NUM_LEDS, fadeToBlackRate);
+  
+  if (step == -1) {
+    
+    // Initalizing ripple 
+    center = 0; 
+    color = gHue;
+    maxSteps =  rippleSize;
+    trailingDots = random(0, 1) % 2;
+    step = 0;
+    
+  } else if (step == 0) {
+    
+    // First pixel of the ripple
+    leds[center] = CHSV(color, 255, 255);
+    step++;
+    
+  } else if (step < maxSteps) {
+    
+    // In the Ripple
+    uint8_t fading = RIPPLE_FADE_RATE/step * 2;
+    leds[wrap(center + step)] += CHSV(color+step, 255, fading);   // Display the next pixels in the range for one side.
+    leds[wrap(center - step)] += CHSV(color-step, 255, fading);   // Display the next pixels in the range for the other side.
+    step++;
+    
+    if (trailingDots && step > 3) {
+      // Add trailing dots
+      leds[wrap(center + step - 3)] = CHSV(color-step, 255, fading);     
+      leds[wrap(center - step + 3)] = CHSV(color+step, 255, fading);   
+    }
+    
+  } else { 
+    // Ending the ripple
+    step = -1;
+  }
+  
+  return STATIC_DELAY;
+} 
+
+
 uint8_t beatQuad8x(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, int type = 0, int offset = 0)
 {
     uint8_t beat = beat8(beats_per_minute);
@@ -169,12 +215,12 @@ void breath();
 
 uint8_t breathing(uint8_t bpmSpeed, uint8_t fadeAmount) { 
   
-  for (int i = 0; i < NUM_LEDS; i++) { 
-    int val = beatQuad8x(bpmSpeed, 0, 200, 3);  
-    leds[i] = CHSV(HUE_BLUE, 255, val);
-  }
+  ripple2(NUM_LEDS, 0); 
   
-  return NO_DELAY; 
+  FastLED.setBrightness(beatQuad8x(bpmSpeed, 0, 255, 3));
+  
+  
+  return STATIC_DELAY; 
 }
 
 
@@ -215,4 +261,50 @@ uint8_t breathing2(uint8_t breathingCycleTime = 5000, uint8_t baseColorFake = 0)
   }
   return STATIC_DELAY;
 }
+
+// @param COOLING: How much does the air cool as it rises?
+// Less cooling = taller flames.  More cooling = shorter flames.
+// Default 55, suggested range 20-100 
+
+// @param SPARKING: What chance (out of 255) is there that a new spark will be lit?
+// Higher chance = more roaring fire.  Lower chance = more flickery fire.
+// Default 120, suggested range 50-200.
+
+const CRGBPalette16 firePalette = CRGBPalette16( CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White);
+//CRGBPalette16 firePalette = OceanColors_p; //HeatColors_p; 
+
+
+uint8_t fire(uint8_t cooling, uint8_t sparking)
+{
+
+  // Array of temperature readings at each simulation cell
+  static byte heat[NUM_LEDS];
+
+  // Step 1.  Cool down every cell a little
+    for(int i = 0; i < NUM_LEDS; i++) {
+      heat[i] = qsub8( heat[i],  random8(0, ((cooling * 10) / NUM_LEDS) + 2));
+    }
+  
+    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+    for(int k= NUM_LEDS - 1; k >= 2; k--) {
+      heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2] ) / 3;
+    }
+    
+    // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
+    if(random8() < sparking ) {
+      int y = random8(7);
+      heat[y] = qadd8(heat[y], random8(160,255) );
+    }
+
+    // Step 4.  Map from heat cells to LED colors
+    for( int j = 0; j < NUM_LEDS; j++) {
+      // Scale the heat value from 0-255 down to 0-240
+      // for best results with color palettes.
+      byte colorindex = scale8(heat[j], 240);
+      leds[j] = ColorFromPalette(firePalette, colorindex);
+    }
+    
+    return STATIC_DELAY;
+}
+
 

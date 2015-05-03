@@ -68,7 +68,9 @@ typedef struct {
 
 AnimationPatternArguments gAnimations[] = {
   
-  {breathing, 5, 4},
+  {fire, 70, 200}, 
+  
+  {breathing, 4, 4},
   {breathing2, 40000, 0},
 
   {soundAnimate, 5, 5},
