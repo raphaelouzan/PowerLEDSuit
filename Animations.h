@@ -270,9 +270,8 @@ uint8_t breathing2(uint8_t breathingCycleTime = 5000, uint8_t baseColorFake = 0)
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
 
-const CRGBPalette16 firePalette = CRGBPalette16( CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White);
-//CRGBPalette16 firePalette = OceanColors_p; //HeatColors_p; 
-
+const CRGBPalette16 firePalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White);
+// More traditional option:HeatColor_p
 
 uint8_t fire(uint8_t cooling, uint8_t sparking)
 {
