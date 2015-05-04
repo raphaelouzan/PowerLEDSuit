@@ -198,10 +198,12 @@ void onTripleClick() {
   
   SettingsMode settings = SettingsMode(&button);
   settings.showSettings();
-  
+  Serial.println("TripleClick - Finished showing settings");
+
   gBrightness = settings.getUserBrightness();
-  Serial.println("TripleClick - New brightness: " + gBrightness);
+  Serial.print("TripleClick - New brightness: ");
   FastLED.setBrightness(gBrightness); 
+  Serial.println(gBrightness);
 }
 
 /** 

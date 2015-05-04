@@ -28,43 +28,48 @@ public:
     
     while (!_exitingSettings) { 
       _button->tick(); 
-      // Show user brightness level
-      // 5 increments, representing 51 brightness points
 
       fadeToBlackBy(leds, NUM_LEDS, 255);
       
-      // Show the max brightness limit in red
-      leds[MAX_LEVEL] = CRGB::Red;
+      uint8_t incrementLeds = NUM_LEDS / MAX_LEVEL;
+      uint8_t incrementBrightness = MAX_BRIGHTNESS / MAX_LEVEL;
 
-      // Show the user level of brightness 
-      // TODO Should be a proper gradient based on palette
-      fill_gradient_RGB(leds, 0, CRGB::Green, _userLevel, CRGB::Red);
-
-      // Set current brightness to represent user level
-      FastLED.setBrightness(getUserBrightness());
+      for(int i = 0; i < _userLevel * incrementLeds; i++) {
+        leds[i] = ColorFromPalette((CRGBPalette16)RainbowColors_p, (incrementLeds * i), 
+          incrementBrightness * i);
+      }
 
       Serial.print("User set brightness at level: ");
       Serial.print(_userLevel);
       Serial.print(" which is :");
       Serial.println(getUserBrightness());
 
-      delay_at_max_brightness_for_power(500);
+      delay_at_max_brightness_for_power(100);
 
       show_at_max_brightness_for_power();
     }
 
     Serial.println("Exiting settings");
     exit();
+    
+    Serial.print("Saving new brightness ");
+    Serial.println(getUserBrightness());
   }
 
   uint8_t getUserBrightness() { 
-    return map(_userLevel, 0, MAX_LEVEL, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+    return _userLevel * (MAX_BRIGHTNESS/MAX_LEVEL);
   }
 
   static void onSettingsClick() { 
     // Increase userLevel
     Serial.print("Settings click, user level:");
-    _userLevel = ++_userLevel % MAX_LEVEL;
+    _userLevel = ++_userLevel % (MAX_LEVEL + 1);
+    
+    // Bring up userLevel if under the minimum
+    if ((_userLevel * (MAX_BRIGHTNESS / MAX_LEVEL) ) < MIN_BRIGHTNESS) { 
+      _userLevel += 1;
+    }
+    
     Serial.println(_userLevel);
   }
 
@@ -98,7 +103,7 @@ public:
   callbackFunction _previousClickHandler; 
   callbackFunction _previousLongPressStopHandler;
 
-  static const uint8_t MAX_LEVEL = 5; 
+  static const uint8_t MAX_LEVEL = 10; 
   static const uint8_t MAX_BRIGHTNESS = 255;
   static const uint8_t MIN_BRIGHTNESS = 25;
 };
