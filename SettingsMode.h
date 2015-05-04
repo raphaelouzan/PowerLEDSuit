@@ -82,6 +82,8 @@ public:
 protected:
   
   void init() { 
+    // TODO Would be cleaner to remove/disable all other button handlers
+    // to prevent unexpected behavior
     _previousClickHandler = _button->_clickFunc;
     _previousLongPressStopHandler = _button->_longPressStopFunc;
 

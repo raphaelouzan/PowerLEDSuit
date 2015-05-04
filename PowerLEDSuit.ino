@@ -19,7 +19,7 @@
 // Ring must be connected to RING_PIN
 #define RING_SIZE       24
       
-uint8_t gBrightness = 80;                           
+#define DEFAULT_BRIGHTNESS 80                           
 
 struct CRGB leds[STRIP_SIZE];                                   
 
@@ -133,7 +133,7 @@ void setup() {
   FastLED.addLeds<NEOPIXEL, RING_PIN>(leds, RING_SIZE).setCorrection(TypicalLEDStrip);
 #endif
 
-  FastLED.setBrightness(gBrightness);
+  FastLED.setBrightness(DEFAULT_BRIGHTNESS);
 
   // FastLED power management set at 5V, 500mA.
   set_max_power_in_volts_and_milliamps(5, 500);               
@@ -144,7 +144,7 @@ void setup() {
   button.attachLongPressStart(onLongPressStart);
   button.attachDuringLongPress(onDuringLongPress);
   button.attachLongPressStop(onLongPressEnd);
-  //button.attachTripleClick(onTripleClick);
+  button.attachTripleClick(onTripleClick);
   
 #if USE_COLOR_SENSOR
   setupColorSensor();
@@ -167,9 +167,8 @@ void onClick() {
 }   
 
 void onDoubleClick() { 
-  Serial.println("Double click - opening settings");
-//  gCurrentPatternNumber = 0; 
-onTripleClick();
+  Serial.println("Double click - reseting to first animation");
+  gCurrentPatternNumber = 0; 
 }
 
 void onLongPressStart() { 
@@ -194,16 +193,16 @@ void onLongPressEnd() {
 }
 
 void onTripleClick() { 
-  Serial.println("[fake] Triple click - opening settings");
+  Serial.println("Triple click - opening settings");
   
   SettingsMode settings = SettingsMode(&button);
   settings.showSettings();
   Serial.println("TripleClick - Finished showing settings");
 
-  gBrightness = settings.getUserBrightness();
+  uint8_t brightness = settings.getUserBrightness();
   Serial.print("TripleClick - New brightness: ");
-  FastLED.setBrightness(gBrightness); 
-  Serial.println(gBrightness);
+  FastLED.setBrightness(brightness); 
+  Serial.println(brightness);
 }
 
 /** 

@@ -26,8 +26,8 @@ The animations evolve from low energy and mellow to more and more intense.
 
 Settings Mode [in progress]
 --
-The strip will use the bottom 10 leds to show the level selected. A red indicator shows the maximum brightness. 
-*Click* to increase brightness until it gets back to minimum (Minimum is 25).
+The settings mode currently allows to set the brightness for the whole program. The brightness is broken down in 10 increments. The strip will use the entire strip as a progress bar. 
+*Click* to increase brightness by 255/10 until it starts over to the minimum (Minimum is 25).
 *Long press* to save changes and go back to animation mode!
 
 Thanks

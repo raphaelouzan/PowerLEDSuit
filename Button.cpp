@@ -159,6 +159,7 @@ void Button::tick(void)
   } else if (_state == 4) { 
     if (buttonLevel == _buttonPressed) { 
       // TODO Triple click always follows a double as of now
+      // TODO Should check timing for that 
       if (_tripleClickFunc) _tripleClickFunc();
     }
     _state = 0;
