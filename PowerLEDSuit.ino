@@ -125,7 +125,7 @@ void setup() {
   
   delay(2000);                                                
 
-  Serial.begin(9600);
+  Serial.begin(57600);
 
   // LEDs
   FastLED.addLeds<NEOPIXEL, LED_PIN>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
@@ -144,7 +144,7 @@ void setup() {
   button.attachLongPressStart(onLongPressStart);
   button.attachDuringLongPress(onDuringLongPress);
   button.attachLongPressStop(onLongPressEnd);
-  button.attachTripleClick(onTripleClick);
+  //button.attachTripleClick(onTripleClick);
   
 #if USE_COLOR_SENSOR
   setupColorSensor();
@@ -157,7 +157,7 @@ void setup() {
  */
 
 void onClick() { 
-  Serial.println("Click");
+  Serial.println("Click - next animation");
   
   static const int numberOfPatterns = sizeof(gAnimations) / sizeof(gAnimations[0]);  
   gCurrentPatternNumber = (gCurrentPatternNumber+1) % numberOfPatterns;
@@ -167,12 +167,13 @@ void onClick() {
 }   
 
 void onDoubleClick() { 
-  Serial.println("Double click");
-  gCurrentPatternNumber = 0; 
+  Serial.println("Double click - opening settings");
+//  gCurrentPatternNumber = 0; 
+onTripleClick();
 }
 
 void onLongPressStart() { 
-  Serial.println("Long press start");
+  Serial.println("Long press start - loading up, up, up... ");
     
 #if USE_COLOR_SENSOR
   sampleColor();  
@@ -183,23 +184,23 @@ void onLongPressStart() {
 }
 
 void onDuringLongPress() { 
-  Serial.println("During long press");
+  Serial.println("During long press - more, more, more...");
 }
 
 void onLongPressEnd() { 
-  Serial.println("Long press end");
+  Serial.println("Long press end - Dropping the bomb");
   // Activate the drop animation
   gCurrentPatternNumber = 1;
 }
 
 void onTripleClick() { 
-  Serial.println("Triple click");
+  Serial.println("[fake] Triple click - opening settings");
   
-  SettingsMode settings = SettingsMode(button);
+  SettingsMode settings = SettingsMode(&button);
   settings.showSettings();
   
   gBrightness = settings.getUserBrightness();
-  Serial.println("New brightness: " + gBrightness);
+  Serial.println("TripleClick - New brightness: " + gBrightness);
   FastLED.setBrightness(gBrightness); 
 }
 

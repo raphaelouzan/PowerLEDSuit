@@ -58,6 +58,11 @@ public:
   callbackFunction _longPressStartFunc;
   callbackFunction _longPressStopFunc;
   callbackFunction _duringLongPressFunc;
+  
+  // Reset state machine
+  void flush() { 
+    _state = 0;
+  }
 
 private:
   int _pin;        // hardware pin number. 

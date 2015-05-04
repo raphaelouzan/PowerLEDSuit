@@ -8,7 +8,7 @@ class SettingsMode
 {
 public:
 
-  SettingsMode(Button& button) : 
+  SettingsMode(Button* button) : 
   _button(button) {
   }
 
@@ -21,12 +21,18 @@ public:
 
     // Default to minimum brightness
     _userLevel = 1;
+    
+    _exitingSettings = false;
 
+    _button->flush();
+    
     while (!_exitingSettings) { 
-      button.tick(); 
+      _button->tick(); 
       // Show user brightness level
       // 5 increments, representing 51 brightness points
 
+      fadeToBlackBy(leds, NUM_LEDS, 255);
+      
       // Show the max brightness limit in red
       leds[MAX_LEVEL] = CRGB::Red;
 
@@ -47,6 +53,7 @@ public:
       show_at_max_brightness_for_power();
     }
 
+    Serial.println("Exiting settings");
     exit();
   }
 
@@ -56,36 +63,40 @@ public:
 
   static void onSettingsClick() { 
     // Increase userLevel
-    _userLevel = +_userLevel % MAX_LEVEL;
+    Serial.print("Settings click, user level:");
+    _userLevel = ++_userLevel % MAX_LEVEL;
+    Serial.println(_userLevel);
   }
 
-  static void onSettingsDoubleClick() { 
+  static void onSettingsLongPressStop() { 
     // Exit settings
+    Serial.println("Settings long press click");
     _exitingSettings = true;
   }
 
 protected:
   
   void init() { 
-    _previousClickHandler = button._clickFunc;
-    _previousDoubleClickHandler = button._doubleClickFunc;
+    _previousClickHandler = _button->_clickFunc;
+    _previousLongPressStopHandler = _button->_longPressStopFunc;
 
-    button.attachClick(onSettingsClick);
-    button.attachDoubleClick(onSettingsDoubleClick);
+    _button->attachClick(onSettingsClick);
+    _button->attachLongPressStop(onSettingsLongPressStop);
   }
 
   void exit() { 
-    button.attachClick(_previousClickHandler);
-    button.attachDoubleClick(_previousDoubleClickHandler);
+    _button->attachClick(_previousClickHandler);
+    _button->attachLongPressStop(_previousLongPressStopHandler);
+    _button->flush();
   }
 
 
 public:
 
-  Button& _button;
+  Button* _button;
 
   callbackFunction _previousClickHandler; 
-  callbackFunction _previousDoubleClickHandler;
+  callbackFunction _previousLongPressStopHandler;
 
   static const uint8_t MAX_LEVEL = 5; 
   static const uint8_t MAX_BRIGHTNESS = 255;
