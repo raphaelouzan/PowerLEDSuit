@@ -311,6 +311,8 @@ uint8_t fire(uint8_t cooling, uint8_t sparking)
  * Drop Animations
  */
  
+
+// TODO Placeholder animation. Need real progress bar action
 uint8_t aboutToDrop(uint8_t a, uint8_t b) {
   
   static int bpmAmount = 2;
