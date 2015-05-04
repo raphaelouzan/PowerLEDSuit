@@ -1,5 +1,5 @@
 // -----
-// OneButton.h - Library for detecting button clicks, doubleclicks and long press pattern on a single button.
+// Button.h - Library for detecting button clicks, doubleclicks and long press pattern on a single button.
 // This class is implemented for use with the Arduino environment.
 // Copyright (c) by Matthias Hertel, http://www.mathertel.de
 // This work is licensed under a BSD style license. See http://www.mathertel.de/License.aspx
@@ -11,9 +11,6 @@
 // 23.03.2014 Enhanced long press functionalities by adding longPressStart and longPressStop callbacks
 // -----
 
-#ifndef OneButton_h
-#define OneButton_h
-
 #include "Arduino.h"
 
 // ----- Callback function types -----
@@ -23,11 +20,11 @@ extern "C" {
 }
 
 
-class OneButton
+class Button
 {
 public:
   // ----- Constructor -----
-  OneButton(int pin, int active);
+  Button(int pin, int active);
   
   // ----- Set runtime parameters -----
 
@@ -44,6 +41,7 @@ public:
   void attachLongPressStart(callbackFunction newFunction);
   void attachLongPressStop(callbackFunction newFunction);
   void attachDuringLongPress(callbackFunction newFunction);
+  void attachTripleClick(callbackFunction newFunction);
 
   // ----- State machine functions -----
 
@@ -64,6 +62,7 @@ private:
   // These variables will hold functions acting as event source.
   callbackFunction _clickFunc;
   callbackFunction _doubleClickFunc;
+  callbackFunction _tripleClickFunc;
   callbackFunction _pressFunc;
   callbackFunction _longPressStartFunc;
   callbackFunction _longPressStopFunc;
@@ -75,6 +74,5 @@ private:
   unsigned long _startTime; // will be set in state 1
 };
 
-#endif
 
 

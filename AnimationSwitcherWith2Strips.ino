@@ -8,9 +8,8 @@ A lot of the code was based on the work of Mark Kriegsman (FastLED)
 */
 
 #include <FastLED.h>                                          
-#include <OneButton.h>
 #include <Wire.h>
-#include "Adafruit_TCS34725.h"
+#include "Button.h"
 
 /** 
  * LEDS
@@ -33,12 +32,13 @@ struct CRGB leds[STRIP_SIZE];                                   // Initialize ou
  * Button Switcher
  */ 
 #define BUTTON_PIN 12
-OneButton button(BUTTON_PIN, true);
+Button button(BUTTON_PIN, true);
 
 /** 
  * Color Sensor 
  */ 
 #if defined(USE_COLOR_SENSOR)
+#include "Adafruit_TCS34725.h"
 #include "ColorSensor.h"
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_4X);
 #endif 
@@ -136,7 +136,7 @@ void setup() {
   button.attachLongPressStart(onLongPressStart);
   button.attachDuringLongPress(onDuringLongPress);
   button.attachLongPressStop(onLongPressEnd);
-  
+  button.attachTripleClick(onTripleClick);
   
 #if defined(USE_COLOR_SENSOR)
   // Color Sensor
@@ -156,6 +156,7 @@ void setup() {
  */
 
 void onClick() { 
+  Serial.println("Click");
   
   static const int numberOfPatterns = sizeof(gAnimations) / sizeof(gAnimations[0]);  
   gCurrentPatternNumber = (gCurrentPatternNumber+1) % numberOfPatterns;
@@ -165,12 +166,15 @@ void onClick() {
 }   
 
 void onDoubleClick() { 
+  Serial.println("Double click");
   gCurrentPatternNumber = 0; 
 }
 
 
 void onLongPressStart() { 
   
+  Serial.println("Long press start");
+    
 #if defined(USE_COLOR_SENSOR)
   sampleColor();  
 #endif
@@ -180,11 +184,18 @@ void onLongPressStart() {
 }
 
 void onDuringLongPress() { 
+  Serial.println("During long press");
 }
 
 void onLongPressEnd() { 
+  Serial.println("Long press end");
   // Activate the drop animation
   gCurrentPatternNumber = 1;
+}
+
+void onTripleClick() { 
+  Serial.println("Triple click");
+  
 }
 
 /** 
