@@ -1,8 +1,20 @@
 #include <Wire.h>
 #include "Adafruit_TCS34725.h"
 
+#define COLOR_SENSOR_READ_TIME 700
+
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_4X);
 byte gammatable[256]; // RGB -> eye recognizable color  
 
+void setupColorSensor() { 
+  loadGammaTable();
+  if (tcs.begin()) {
+    Serial.println("Found sensor");
+    tcs.setInterrupt(true); // turn LED off
+  } else {
+    Serial.println("No TCS34725 found ... check your connections");
+  }
+}
 
 void loadGammaTable() { 
   // thanks PhilB for this gamma table!
@@ -24,7 +36,7 @@ void sampleColor() {
 
   tcs.setInterrupt(false);      // turn on LED
 
-  delay(700);  // takes 50ms to read 
+  delay(COLOR_SENSOR_READ_TIME);  // takes 50ms to read 
   
   tcs.getRawData(&red, &green, &blue, &clear);
 

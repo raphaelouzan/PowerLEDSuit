@@ -13,6 +13,7 @@
 
 #include "Arduino.h"
 
+
 // ----- Callback function types -----
 
 extern "C" {
@@ -49,6 +50,15 @@ public:
   void tick(void);
   bool isLongPressed();
 
+  // These variables will hold functions acting as event source.
+  callbackFunction _clickFunc;
+  callbackFunction _doubleClickFunc;
+  callbackFunction _tripleClickFunc;
+  callbackFunction _pressFunc;
+  callbackFunction _longPressStartFunc;
+  callbackFunction _longPressStopFunc;
+  callbackFunction _duringLongPressFunc;
+
 private:
   int _pin;        // hardware pin number. 
   int _clickTicks; // number of ticks that have to pass by before a click is detected
@@ -59,20 +69,9 @@ private:
 
   bool _isLongPressed;
 
-  // These variables will hold functions acting as event source.
-  callbackFunction _clickFunc;
-  callbackFunction _doubleClickFunc;
-  callbackFunction _tripleClickFunc;
-  callbackFunction _pressFunc;
-  callbackFunction _longPressStartFunc;
-  callbackFunction _longPressStopFunc;
-  callbackFunction _duringLongPressFunc;
-
   // These variables that hold information across the upcoming tick calls.
   // They are initialized once on program start and are updated every time the tick function is called.
   int _state;
   unsigned long _startTime; // will be set in state 1
 };
-
-
 

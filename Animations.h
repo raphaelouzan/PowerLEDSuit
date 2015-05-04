@@ -143,7 +143,9 @@ uint8_t ripple(uint8_t rippleSize, uint8_t fadeToBlackRate) {
   return STATIC_DELAY;
 } 
 
-uint8_t ripple2(uint8_t rippleSize, uint8_t fadeToBlackRate) {
+// TODO should be a mode of the ripple function
+// or make the ripple timed by beat8 or sin8
+uint8_t breathingRipple(uint8_t rippleSize, uint8_t fading) {
 
   static int step = -1; 
   static int center = 0;  // Center of the current ripple      
@@ -171,7 +173,6 @@ uint8_t ripple2(uint8_t rippleSize, uint8_t fadeToBlackRate) {
   } else if (step < maxSteps) {
     
     // In the Ripple
-    uint8_t fading = RIPPLE_FADE_RATE/step * 2;
     leds[wrap(center + step)] += CHSV(color+step, 255, fading);   // Display the next pixels in the range for one side.
     leds[wrap(center - step)] += CHSV(color-step, 255, fading);   // Display the next pixels in the range for the other side.
     step++;
@@ -210,18 +211,67 @@ uint8_t beatQuad8x(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest
     return result;
 }
 
+// EXPERIMENTAL
+uint8_t rippleSin(uint8_t rippleSize, uint8_t fadeToBlackRate) {
 
-void breath();
+  static int step = -1; 
+  static int center = 0;  // Center of the current ripple      
+  static uint8_t color; // Ripple colour
+  static boolean trailingDots; // whether to add trailing dots to the ripple
+  static int maxSteps;
+  
+  fadeToBlackBy(leds, NUM_LEDS, fadeToBlackRate);
+  
+
+  if (step == -1) {
+    
+    // Initalizing ripple 
+    center = 0; 
+    color = gHue;
+    maxSteps =  rippleSize;
+    trailingDots = random(0, 1) % 2;
+    step = 0;
+    
+  } else if (step == 0) {
+    
+    // First pixel of the ripple
+    leds[center] = CHSV(color, 255, 255);
+    step = beatQuad8x(7, 1, maxSteps * 1.5, 3);
+    
+  } else if (step < maxSteps) {
+    
+    uint8_t fading = RIPPLE_FADE_RATE/step * 2;
+    // In the Ripple
+    leds[wrap(center + step)] += CHSV(color+step, 255, fading);   // Display the next pixels in the range for one side.
+    leds[wrap(center - step)] += CHSV(color-step, 255, fading);   // Display the next pixels in the range for the other side.
+    
+    step = beatQuad8x(7, 1, maxSteps * 1.5, 3);
+    
+    if (trailingDots && step > 3) {
+      // Add trailing dots
+      leds[wrap(center + step - 3)] = CHSV(color-step, 255, fading);     
+      leds[wrap(center - step + 3)] = CHSV(color+step, 255, fading);   
+    }
+    
+  } else { 
+    // Ending the ripple
+    step = -1;
+  }
+  
+  return STATIC_DELAY;
+} 
+
+
 
 uint8_t breathing(uint8_t bpmSpeed, uint8_t fadeAmount) { 
   
-  ripple2(NUM_LEDS, 0); 
-  
-  FastLED.setBrightness(beatQuad8x(bpmSpeed, 0, 255, 3));
-  
+  // TODO Try 4 (ease8InOutApprox)
+  breathingRipple(NUM_LEDS, beatQuad8x(bpmSpeed, 0, 255, 3)); 
   
   return STATIC_DELAY; 
 }
+
+
 
 
 const uint8_t KEYFRAMES[]  = {
@@ -237,10 +287,14 @@ const uint8_t KEYFRAMES[]  = {
   20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 
 };
 
-unsigned long lastBreath = 0.0;
-int keyframePointer = 0;
+
+
 
 uint8_t breathing2(uint8_t breathingCycleTime = 5000, uint8_t baseColorFake = 0) {
+  
+  static unsigned long lastBreath = 0.0;
+  static int keyframePointer = 0;
+
   int numKeyframes = sizeof(KEYFRAMES) - 1;
   float period = breathingCycleTime / numKeyframes;
   unsigned long now = millis();
@@ -313,6 +367,7 @@ uint8_t fire(uint8_t cooling, uint8_t sparking)
  
 
 // TODO Placeholder animation. Need real progress bar action
+// TODO Maybe try CRGB HeatColor(uint8_t temperature) with a rising temp
 uint8_t aboutToDrop(uint8_t a, uint8_t b) {
   
   static int bpmAmount = 2;
