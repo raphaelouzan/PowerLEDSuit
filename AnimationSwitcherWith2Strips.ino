@@ -70,7 +70,9 @@ AnimationPatternArguments gAnimations[] = {
   
   {fire, 100, 200}, 
   
+  // TODO Fix or kill
   {breathing, 4, 4},
+  
   {breathing2, 40000, 0},
 
   {soundAnimate, 5, 5},
@@ -88,17 +90,23 @@ AnimationPatternArguments gAnimations[] = {
   {applause, HUE_BLUE, HUE_PURPLE},
   {applause, HUE_BLUE, HUE_RED},
   
+  // TODO Should probably remove or move to lower energy
   {twinkle,  15, 100},
+  
+  // TODO Slow it down, like applause
   {twinkle,  50, 224},
   
   {confetti, 20, 10},
-  {confetti, 16,  3},
-  
-  {bpm,      62,  3},
-  {bpm,      125, 7},
-  {bpm,      15,  1}
+  {confetti, 16,  3}
+};
+
+AnimationPatternArguments gDropAnimations[] = {
+  {aboutToDrop, 100, 200},
+  {dropped, 100, 200}
 };
  
+// Default sequence to main animations
+AnimationPatternArguments* gSequence = gAnimations; 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 
 
@@ -125,7 +133,9 @@ void setup() {
   // Button
   button.attachClick(onClick);
   button.attachDoubleClick(onDoubleClick); 
-  button.attachLongPressStart(onLongPress);
+  button.attachLongPressStart(onLongPressStart);
+  button.attachDuringLongPress(onDuringLongPress);
+  button.attachLongPressStop(onLongPressEnd);
   
   
 #if defined(USE_COLOR_SENSOR)
@@ -146,21 +156,36 @@ void setup() {
  */
 
 void onClick() { 
+  
   static const int numberOfPatterns = sizeof(gAnimations) / sizeof(gAnimations[0]);  
   gCurrentPatternNumber = (gCurrentPatternNumber+1) % numberOfPatterns;
+  
+  // Make sure we're on the main animation sequence
+  gSequence = gAnimations;
 }   
 
 void onDoubleClick() { 
   gCurrentPatternNumber = 0; 
 }
 
-void onLongPress() { 
-  // TODO change palette
+
+void onLongPressStart() { 
+  
 #if defined(USE_COLOR_SENSOR)
   sampleColor();  
 #endif
+  
+  gSequence = gDropAnimations;
+  gCurrentPatternNumber = 0;
 }
 
+void onDuringLongPress() { 
+}
+
+void onLongPressEnd() { 
+  // Activate the drop animation
+  gCurrentPatternNumber = 1;
+}
 
 /** 
  * Loop and led management
@@ -172,9 +197,9 @@ void loop () {
   
   boolean staticDelay = true;
   
-  uint8_t arg1 = gAnimations[gCurrentPatternNumber].mArg1;
-  uint8_t arg2 = gAnimations[gCurrentPatternNumber].mArg2;
-  AnimationPattern animate = gAnimations[gCurrentPatternNumber].mPattern;
+  uint8_t arg1 = gSequence[gCurrentPatternNumber].mArg1;
+  uint8_t arg2 = gSequence[gCurrentPatternNumber].mArg2;
+  AnimationPattern animate = gSequence[gCurrentPatternNumber].mPattern;
   
   uint8_t animDelay = animate(arg1, arg2);
   

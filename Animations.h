@@ -307,3 +307,23 @@ uint8_t fire(uint8_t cooling, uint8_t sparking)
 }
 
 
+/*
+ * Drop Animations
+ */
+ 
+uint8_t aboutToDrop(uint8_t a, uint8_t b) {
+  
+  static int bpmAmount = 2;
+
+  sinelon(bpmAmount++, 0  );
+  bpmAmount = ++bpmAmount % 160;
+  
+  return NO_DELAY;
+}
+
+uint8_t dropped(uint8_t a, uint8_t b) {
+  bpm(125, random(5, 10));
+  return NO_DELAY;
+}
+
+
