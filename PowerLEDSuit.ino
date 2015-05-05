@@ -1,6 +1,9 @@
 #include <FastLED.h>                                          
 #include <Wire.h>
 
+#define DEBUG
+#include "DebugUtils.h"
+
 /** 
  * Variable Components
  */
@@ -125,7 +128,9 @@ void setup() {
   
   delay(2000);                                                
 
-  Serial.begin(57600);
+  DEBUG_START(57600)
+
+  PRINT("PowerLEDSuit starting...");
 
   // LEDs
   FastLED.addLeds<NEOPIXEL, LED_PIN>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
