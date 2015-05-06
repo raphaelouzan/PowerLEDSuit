@@ -47,7 +47,7 @@ public:
     exit();
   }
 
-  uint8_t getUserBrightness() { 
+  static uint8_t getUserBrightness() { 
     return _userLevel * (MAX_BRIGHTNESS/MAX_LEVEL);
   }
 
@@ -62,7 +62,7 @@ public:
     }
     
     PRINTX("New user level:", _userLevel);
-    PRINTX("Which sets a brightness of:", getUserBrightness());
+    PRINTX("Which sets a brightness of:", SettingsMode::getUserBrightness());
   }
 
   static void onSettingsLongPressStop() { 
