@@ -105,7 +105,7 @@ AnimationPattern gAnimations[] = {
   {confetti, 20, 10},
   {confetti, 16,  3}, 
 
-  {bpm,      15,  1},
+  {bpm,      15,  2},
   {bpm,      62,  3},
   {bpm,      125, 7}
 };
@@ -162,7 +162,7 @@ void setup() {
  */
 
 void onClick() { 
-  Serial.println("Click - next animation");
+  PRINT("Next animation");
   
   static const int numberOfPatterns = sizeof(gAnimations) / sizeof(gAnimations[0]);  
   gCurrentPatternNumber = (gCurrentPatternNumber+1) % numberOfPatterns;
@@ -172,12 +172,12 @@ void onClick() {
 }   
 
 void onDoubleClick() { 
-  Serial.println("Double click - reseting to first animation");
+  PRINT("Reseting to first animation");
   gCurrentPatternNumber = 0; 
 }
 
 void onLongPressStart() { 
-  Serial.println("Long press start - loading up, up, up... ");
+  PRINT("Loading up, up, up... ");
     
 #if USE_COLOR_SENSOR
   sampleColor();  
@@ -188,26 +188,24 @@ void onLongPressStart() {
 }
 
 void onDuringLongPress() { 
-  Serial.println("During long press - more, more, more...");
+  PRINT("More, more, more...");
 }
 
 void onLongPressEnd() { 
-  Serial.println("Long press end - Dropping the bomb");
+  PRINT("Dropping the bomb");
   // Activate the drop animation
   gCurrentPatternNumber = 1;
 }
 
 void onTripleClick() { 
-  Serial.println("Triple click - opening settings");
+  PRINT("Opening settings");
   
   SettingsMode settings = SettingsMode(&button);
   settings.showSettings();
-  Serial.println("TripleClick - Finished showing settings");
 
   uint8_t brightness = settings.getUserBrightness();
-  Serial.print("TripleClick - New brightness: ");
+  PRINTX("TripleClick - New brightness: ", brightness);
   FastLED.setBrightness(brightness); 
-  Serial.println(brightness);
 }
 
 /** 

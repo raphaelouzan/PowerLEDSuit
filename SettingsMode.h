@@ -16,8 +16,7 @@ public:
   void showSettings() { 
     init(); 
 
-    Serial.print("Settings Mode - Current brightness "); 
-    Serial.println(FastLED.getBrightness());
+    PRINTX("Settings Mode - Current brightness ", FastLED.getBrightness()); 
 
     // Default to minimum brightness
     _userLevel = 1;
@@ -39,21 +38,13 @@ public:
           incrementBrightness * i);
       }
 
-      Serial.print("User set brightness at level: ");
-      Serial.print(_userLevel);
-      Serial.print(" which is :");
-      Serial.println(getUserBrightness());
-
       delay_at_max_brightness_for_power(100);
 
       show_at_max_brightness_for_power();
     }
 
-    Serial.println("Exiting settings");
+    PRINT("Exiting settings");
     exit();
-    
-    Serial.print("Saving new brightness ");
-    Serial.println(getUserBrightness());
   }
 
   uint8_t getUserBrightness() { 
@@ -62,7 +53,7 @@ public:
 
   static void onSettingsClick() { 
     // Increase userLevel
-    Serial.print("Settings click, user level:");
+    
     _userLevel = ++_userLevel % (MAX_LEVEL + 1);
     
     // Bring up userLevel if under the minimum
@@ -70,12 +61,13 @@ public:
       _userLevel += 1;
     }
     
-    Serial.println(_userLevel);
+    PRINTX("New user level:", _userLevel);
+    PRINTX("Which sets a brightness of:", getUserBrightness());
   }
 
   static void onSettingsLongPressStop() { 
     // Exit settings
-    Serial.println("Settings long press click");
+   PRINT("Exit clicked");
     _exitingSettings = true;
   }
 

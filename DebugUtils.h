@@ -16,8 +16,6 @@ DebugUtils.h - Simple debugging utilities.
      Serial.print(millis());     \
      Serial.print(": ");    \
      Serial.print(__PRETTY_FUNCTION__); \
-     Serial.print(' ');      \
-     Serial.print(__FILE__);     \
      Serial.print(':');      \
      Serial.print(__LINE__);     \
      Serial.print(' ');      \
