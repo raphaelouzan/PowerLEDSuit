@@ -35,7 +35,7 @@ public:
 
       for(int i = 0; i < _userLevel * incrementLeds; i++) {
         leds[i] = ColorFromPalette((CRGBPalette16)RainbowColors_p, (incrementLeds * i), 
-          incrementBrightness * i);
+          getUserBrightness());
       }
 
       delay_at_max_brightness_for_power(100);
