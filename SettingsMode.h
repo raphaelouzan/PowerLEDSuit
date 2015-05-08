@@ -14,28 +14,33 @@ public:
 
   
   void showSettings() { 
-    init(); 
 
     PRINTX("Settings Mode - Current brightness ", FastLED.getBrightness()); 
 
+    init(); 
+ 
+    const uint8_t incrementLeds = NUM_LEDS / MAX_LEVEL;
+    const uint8_t incrementBrightness = MAX_BRIGHTNESS / MAX_LEVEL;
+   
     // Default to minimum brightness
     _userLevel = 1;
     
     _exitingSettings = false;
-
-    _button->flush();
     
     while (!_exitingSettings) { 
       _button->tick(); 
 
       fadeToBlackBy(leds, NUM_LEDS, 255);
-      
-      uint8_t incrementLeds = NUM_LEDS / MAX_LEVEL;
-      uint8_t incrementBrightness = MAX_BRIGHTNESS / MAX_LEVEL;
 
-      for(int i = 0; i < _userLevel * incrementLeds; i++) {
-        leds[i] = ColorFromPalette((CRGBPalette16)RainbowColors_p, (incrementLeds * i), 
-          incrementBrightness * i);
+      // For each level until the selected one
+      for(uint8_t i = 1; i <= _userLevel; i++) {
+        
+        // Draw incrementLeds pixels with its relevant brightness 
+        uint8_t incrementStart = (i-1) * incrementLeds;
+
+        for (uint8_t x = 0; x < incrementLeds; ++x) { 
+          leds[incrementStart + x] = CHSV(43*x, 255, i*incrementBrightness);
+        }
       }
 
       delay_at_max_brightness_for_power(100);
@@ -57,7 +62,7 @@ public:
     _userLevel = ++_userLevel % (MAX_LEVEL + 1);
     
     // Bring up userLevel if under the minimum
-    if ((_userLevel * (MAX_BRIGHTNESS / MAX_LEVEL) ) < MIN_BRIGHTNESS) { 
+    while ((_userLevel * (MAX_BRIGHTNESS / MAX_LEVEL) ) < MIN_BRIGHTNESS) { 
       _userLevel += 1;
     }
     
@@ -81,11 +86,14 @@ protected:
 
     _button->attachClick(onSettingsClick);
     _button->attachLongPressStop(onSettingsLongPressStop);
+
+    _button->flush();
   }
 
   void exit() { 
     _button->attachClick(_previousClickHandler);
     _button->attachLongPressStop(_previousLongPressStopHandler);
+    
     _button->flush();
   }
 
