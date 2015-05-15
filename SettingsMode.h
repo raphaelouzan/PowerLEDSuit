@@ -30,7 +30,7 @@ public:
     while (!_exitingSettings) { 
       _button->tick(); 
 
-      fadeToBlackBy(leds, NUM_LEDS, 255);
+      fadeToBlackBy(leds, STRIP_SIZE, 255);
 
       // For each level until the selected one
       for(uint8_t i = 1; i <= _userLevel; i++) {
@@ -39,7 +39,8 @@ public:
         uint8_t incrementStart = (i-1) * incrementLeds;
 
         for (uint8_t x = 0; x < incrementLeds; ++x) { 
-          leds[incrementStart + x] = CHSV(43*x, 255, i*incrementBrightness);
+          uint8_t index = incrementStart + x;
+          leds[(STRIP_SIZE - 1) - index] = CHSV(43*x, 255, i*incrementBrightness);
         }
       }
 
