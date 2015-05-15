@@ -324,10 +324,7 @@ uint8_t breathing2(uint8_t breathingCycleTime = 5000, uint8_t baseColorFake = 0)
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
 
-const CRGBPalette16 firePalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White);
-// More traditional option:HeatColor_p
-
-uint8_t fire(uint8_t cooling, uint8_t sparking)
+uint8_t fire(uint8_t cooling, uint8_t sparking, const CRGBPalette16& palette)
 {
 
   // Array of temperature readings at each simulation cell
@@ -354,10 +351,21 @@ uint8_t fire(uint8_t cooling, uint8_t sparking)
       // Scale the heat value from 0-255 down to 0-240
       // for best results with color palettes.
       byte colorindex = scale8(heat[j], 240);
-      leds[j] = ColorFromPalette(firePalette, colorindex);
+      leds[j] = ColorFromPalette(palette, colorindex);
     }
     
     return STATIC_DELAY;
+}
+
+
+const CRGBPalette16 bluePalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White);
+
+uint8_t blueFire(uint8_t cooling, uint8_t sparking) { 
+   return fire(cooling, sparking, bluePalette); 
+}
+
+uint8_t redFire(uint8_t cooling, uint8_t sparking) { 
+   return fire(cooling, sparking, HeatColors_p); 
 }
 
 
@@ -368,6 +376,7 @@ uint8_t fire(uint8_t cooling, uint8_t sparking)
 
 // TODO Placeholder animation. Need real progress bar action
 // TODO Maybe try CRGB HeatColor(uint8_t temperature) with a rising temp
+// or focus on the middle and expand from there
 uint8_t aboutToDrop(uint8_t a, uint8_t b) {
   
   static int bpmAmount = 2;
