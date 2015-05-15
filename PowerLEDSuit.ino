@@ -21,6 +21,7 @@
 #define RING_PIN        9
 // Ring must be connected to RING_PIN
 #define RING_SIZE       24
+#define REVERSE_LEDS    0
       
 #define DEFAULT_BRIGHTNESS 80                           
 
@@ -226,12 +227,16 @@ void loop() {
 
   mirrorLeds();
   
+  #if REVERSE_LEDS
+    reverseLeds();
+  #endif
+  
   if (animDelay != NO_DELAY) {
     delay_at_max_brightness_for_power(animDelay != RANDOM_DELAY ? 70 : random8(10,100) * 2.5);
   }
-    
+
   show_at_max_brightness_for_power();                         // Power managed display of LEDs.
-  
+
 } 
 
 void mirrorLeds() { 
@@ -243,4 +248,12 @@ void mirrorLeds() {
   
 }
 
-
+void reverseLeds() {
+  uint8_t left = 0;
+  uint8_t right = STRIP_SIZE-1;
+  while (left < right) {
+    CRGB temp = leds[left];
+    leds[left++] = leds[right];
+    leds[right--] = temp;
+  }
+}
