@@ -9,6 +9,7 @@
  */
 #define USE_COLOR_SENSOR 0
 #define USE_RING         1
+
   
 /** 
  * LEDS
@@ -24,7 +25,7 @@
       
 #define DEFAULT_BRIGHTNESS 80                           
 
-struct CRGB leds[STRIP_SIZE];                                   
+struct CRGB leds[STRIP_SIZE];                              
 
 /** 
  * Button Switcher
@@ -37,6 +38,7 @@ Button button(BUTTON_PIN, true);
  * Color Sensor 
  */ 
 #if USE_COLOR_SENSOR
+#include "Adafruit_TCS34725.h"
 #include "ColorSensor.h"
 #endif 
 
@@ -70,12 +72,14 @@ typedef struct {
 
 AnimationPattern gAnimations[] = {
   
-  // Experimental
-  {rippleSin, 30, 50}, 
-
   {soundAnimate, 5, 5},
+  
+  // Experimental
+  {rippleSin, 30, 80}, 
 
-  {fire, 100, 200}, 
+  {blueFire, 100, 200}, 
+  
+  {redFire, 100, 100},
   
   // TODO Fix or kill
   {breathing, 4, 4},
