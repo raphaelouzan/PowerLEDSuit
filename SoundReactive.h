@@ -19,7 +19,7 @@ int
   maxLvlAvg = 512;
   
 // TODO probably better use RainbowColors_p;
-CRGBPalette16 gPalette = PartyColors_p; 
+CRGBPalette16 gPalette = HeatColors_p; 
 
 // TODO diming should be much easier on the eye
 // TODO Avoid flickering on the ey
@@ -47,7 +47,7 @@ uint8_t soundAnimate(uint8_t fakeNoise, uint8_t fakeTop) {
   // Color pixels based on rainbow gradient
   for (i=0; i<NUM_LEDS; i++) {
     if (i >= height)  leds[i].setRGB( 0,0, 0);
-    else leds[i] = ColorFromPalette(gPalette, map(i, 0, NUM_LEDS-1, 0, 255), 100, BLEND);
+    else leds[i] = ColorFromPalette(gPalette, 90 + map(i, 0, NUM_LEDS-1, 0, 255), 100, BLEND);
   }
  
   // Draw peak dot  
