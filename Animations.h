@@ -65,7 +65,7 @@ uint8_t confetti(uint8_t colorVariation, uint8_t fadeAmount)
   // random colored speckles that blink in and fade smoothly
   fadeToBlackBy(leds, NUM_LEDS, fadeAmount);
   int pos = random16(NUM_LEDS);
-  leds[pos] += CHSV( gHue + random8(colorVariation), 200, 255);
+  leds[pos] += CHSV(gHue + random8(colorVariation), 200, 255);
   
   return RANDOM_DELAY; 
   
