@@ -24,7 +24,7 @@
 #define RING_SIZE       24
 #define REVERSE_LEDS    0
       
-#define DEFAULT_BRIGHTNESS 80                           
+#define DEFAULT_BRIGHTNESS 120                           
 
 struct CRGB leds[STRIP_SIZE];                              
 
@@ -235,11 +235,23 @@ void loop() {
     reverseLeds();
   #endif
   
+//  switch(animDelay) { 
+//    
+//    case STATIC_DELAY: 
+//      delay_at_max_brightness_for_power(70);
+//      break;
+//      
+//    case RANDOM_DELAY: 
+//      uint8_t randomDelay = beatsin8(120, 10, 400);
+//      delay_at_max_brightness_for_power(randomDelay);
+//      break;
+// 
+//  };
   if (animDelay != NO_DELAY) {
-    delay_at_max_brightness_for_power(animDelay != RANDOM_DELAY ? 70 : random8(10,100) * 2.5);
+    delay_at_max_brightness_for_power(animDelay != RANDOM_DELAY ? 70 : random8(10,100) * 4.5);
   }
 
-  show_at_max_brightness_for_power();                         // Power managed display of LEDs.
+  show_at_max_brightness_for_power();                         
 
 } 
 
