@@ -158,7 +158,7 @@ uint8_t beatCubic8x(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highes
 uint8_t breathing(uint8_t bpmSpeed, uint8_t fadeAmount) { 
   
   int length = beatCubic8x(bpmSpeed, 0, NUM_LEDS, 3);
-  int light = beatCubic8x(bpmSpeed, 0, 255, 3);
+  int light = beatCubic8x(bpmSpeed, 100, 255, 3);
   
   static bool inhale = true; 
  
@@ -167,6 +167,7 @@ uint8_t breathing(uint8_t bpmSpeed, uint8_t fadeAmount) {
   } else {
     for (int i = 0; i < length; i++) 
       leds[i] = CHSV(HUE_RED, 255, light);
+
     fadeToBlackBy(leds, NUM_LEDS, light);
   }
  
