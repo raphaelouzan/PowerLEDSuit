@@ -73,10 +73,9 @@ typedef struct {
 
 AnimationPattern gAnimations[] = {
   
-  {soundAnimate, 5, 5},
+  {breathing, 16, 64},
   
-  // Experimental
-  {rippleSin, 30, 80}, 
+  {soundAnimate, 5, 5},
 
   {blueFire, 100, 200}, 
   
@@ -87,8 +86,7 @@ AnimationPattern gAnimations[] = {
   
   {breathing2, 40000, 0},
   
-  // Ripple size should probably be smaller
-  {ripple,  60,  50},
+  {ripple,  60,  40},
  
   {sinelon,  7, 32},
   {sinelon,  7, 4},
