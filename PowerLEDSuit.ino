@@ -80,7 +80,7 @@ AnimationPattern gAnimations[] = {
 
   {blueFire, 100, 200}, 
   
-  {redFire, 100, 100},
+  {multiFire, 100, 100},
   
   // TODO Fix or kill
   {breathing, 4, 4},

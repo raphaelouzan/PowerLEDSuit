@@ -364,8 +364,12 @@ uint8_t blueFire(uint8_t cooling, uint8_t sparking) {
    return fire(cooling, sparking, bluePalette); 
 }
 
-uint8_t redFire(uint8_t cooling, uint8_t sparking) { 
-   return fire(cooling, sparking, HeatColors_p); 
+uint8_t multiFire(uint8_t cooling, uint8_t sparking) { 
+   CRGB darkcolor  = CHSV(gHue, 255, 192); // pure hue, three-quarters brightness
+   CRGB lightcolor = CHSV(gHue, 128, 255); // half 'whitened', full brightness
+   CRGBPalette16 pal = CRGBPalette16(CRGB::Black, darkcolor, lightcolor, CRGB::White);
+
+   return fire(cooling, sparking, pal); 
 }
 
 
