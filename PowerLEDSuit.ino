@@ -246,7 +246,7 @@ void loop() {
 void mirrorLeds() { 
 
   // TODO Left a pixel off in the middle on purpose. should be removed after set up
-  for (int i = STRIP_SIZE-1, x = 0; i > NUM_LEDS; i--, x++) { 
+  for (int i = STRIP_SIZE-1, x = 0; i >= NUM_LEDS; i--, x++) { 
     leds[i] = leds[x];
   }
   
