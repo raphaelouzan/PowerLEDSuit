@@ -73,8 +73,6 @@ typedef struct {
 
 AnimationPattern gAnimations[] = {
   
-  {breathing, 16, 64},
-  
   {soundAnimate, 5, 5},
 
   {blueFire, 100, 200}, 
@@ -82,7 +80,7 @@ AnimationPattern gAnimations[] = {
   {multiFire, 100, 100},
   
   // TODO Fix or kill
-  {breathing, 4, 4},
+  {breathing, 16, 64},
   
   {breathing2, 40000, 0},
   
