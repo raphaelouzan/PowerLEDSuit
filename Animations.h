@@ -266,16 +266,17 @@ uint8_t fire(uint8_t cooling, uint8_t sparking, const CRGBPalette16& palette)
 }
 
 
-const CRGBPalette16 bluePalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White);
+
 
 uint8_t blueFire(uint8_t cooling, uint8_t sparking) { 
+   static const CRGBPalette16 bluePalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White);
    return fire(cooling, sparking, bluePalette); 
 }
 
 uint8_t multiFire(uint8_t cooling, uint8_t sparking) { 
    CRGB darkcolor  = CHSV(gHue, 255, 192); // pure hue, three-quarters brightness
    CRGB lightcolor = CHSV(gHue, 128, 255); // half 'whitened', full brightness
-   CRGBPalette16 pal = CRGBPalette16(CRGB::Black, darkcolor, lightcolor, CRGB::White);
+   const CRGBPalette16 pal = CRGBPalette16(CRGB::Black, darkcolor, lightcolor, CRGB::White);
 
    return fire(cooling, sparking, pal); 
 }
