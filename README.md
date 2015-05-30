@@ -1,8 +1,6 @@
 PowerLEDSuit
 -
 
-![alt tag](https://www.dropbox.com/s/i3s1qmty3xxm41g/2015-05-28%2013.08.40.jpg)
-
 Components
 --
 * At least 1 LED Strip on dataport LED_PIN
@@ -34,12 +32,16 @@ The settings mode currently allows to set the brightness for the whole program. 
 *Click* to increase brightness by 255/10 until it starts over to the minimum (Minimum is 25).
 *Long press* to save changes and go back to animation mode!
 
+LED Diffusers
+-- 
+3D Printed in NinjaFlex Semi-Transparent Filament with Makerbot Replicator 2. Can publish the models on Thingiverse if needed.
+
 Thanks
 --
 A lot of this code is based on the outstanding work of Mark Kriegsman and its fantastic library FastLED, as well as some from Andrew Tuline. 
 
-Teaser 
+Teaser
 --
 https://instagram.com/p/16XSRDHMJk 
-
-![alt tag](https://www.dropbox.com/s/dpmx56i987c81z4/2015-05-21%2003.00.32.jpg?dl=0)
+![](https://dl.dropboxusercontent.com/s/i3s1qmty3xxm41g/2015-05-28%2013.08.40.jpg)
+![](https://dl.dropboxusercontent.com/s/dpmx56i987c81z4/2015-05-21%2003.00.32.jpg)
