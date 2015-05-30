@@ -1,6 +1,8 @@
 PowerLEDSuit
 -
 
+![alt tag](https://www.dropbox.com/s/i3s1qmty3xxm41g/2015-05-28%2013.08.40.jpg)
+
 Components
 --
 * At least 1 LED Strip on dataport LED_PIN
@@ -16,7 +18,9 @@ Turn Flora on to start with the first animation. The first animation is sound re
 - *Click* once to move to the next animation. 
 The animations evolve from low energy and mellow to more and more intense. 
 
-- *Double-click* to reset to the first animation
+- *Double-click* to reset to the first animation. 
+
+- *Double-click* again to change its palette (will rotate through palettes)
 
 - *Hold the button down* to get the animation to prepare for a peak. It will go up and up until you release
 
@@ -24,7 +28,7 @@ The animations evolve from low energy and mellow to more and more intense.
 
 - *Triple-click* to go to settings mode 
 
-Settings Mode [in progress]
+Settings Mode
 --
 The settings mode currently allows to set the brightness for the whole program. The brightness is broken down in 10 increments. The strip will use the entire strip as a progress bar. 
 *Click* to increase brightness by 255/10 until it starts over to the minimum (Minimum is 25).
@@ -37,3 +41,5 @@ A lot of this code is based on the outstanding work of Mark Kriegsman and its fa
 Teaser 
 --
 https://instagram.com/p/16XSRDHMJk 
+
+![alt tag](https://www.dropbox.com/s/dpmx56i987c81z4/2015-05-21%2003.00.32.jpg?dl=0)
