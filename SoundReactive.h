@@ -1,4 +1,3 @@
-
 #include <FastLED.h>
 
 #define DC_OFFSET  0                                         // DC offset in mic signal - if unusure, leave 0
@@ -45,7 +44,7 @@ uint8_t soundAnimate(uint8_t fakeNoise, uint8_t fakeTop) {
   // Color pixels based on rainbow gradient
   for (i=0; i<NUM_LEDS; i++) {
     if (i >= height)  leds[i].setRGB( 0,0, 0);
-    else leds[i] = ColorFromPalette(gPalettes[gCurrentPaletteIndex], 90 + map(i, 0, NUM_LEDS-1, 0, 255), 100, BLEND);
+    else leds[i] = ColorFromPalette(gPalettes[gCurrentPaletteIndex], 90 + map(i, 0, NUM_LEDS-1, 0, 255), 100, LINEARBLEND);
   }
  
   // Draw peak dot  
