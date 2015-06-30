@@ -1,4 +1,4 @@
-#include <FastLED.h>                                          
+#include <FastLED.h>
 #include <Wire.h>
 
 #define DEBUG
@@ -8,7 +8,7 @@
  * Variable Components
  */
 #define USE_COLOR_SENSOR 0
-#define USE_RING         1
+#define USE_RING         0
 
   
 /** 
@@ -22,7 +22,7 @@
 #define RING_PIN        9
 // Ring must be connected to RING_PIN
 #define RING_SIZE       24
-#define REVERSE_LEDS    0
+#define REVERSE_LEDS    1
       
 #define DEFAULT_BRIGHTNESS 120                           
 
@@ -64,6 +64,12 @@ uint8_t gCurrentPaletteIndex = 0;
 #define MIC_PIN A10
 #include "SoundReactive.h"
 
+/**
+ * Pulse Sensor
+ */
+int pulsePin = 9;                 // Pulse Sensor purple wire connected to analog pin 0
+int blinkPin = 7;                // pin to blink led at each beat
+#include "PulseSensor.h"
 
 /**
  * Sequencing
@@ -79,6 +85,8 @@ typedef struct {
 AnimationPattern gAnimations[] = {
   
   {soundAnimate, 5, 5},
+
+  {pulseSensor, 0, 0},
 
   {blueFire, 100, 200}, 
   
@@ -172,6 +180,15 @@ void onClick() {
   
   static const int numberOfPatterns = sizeof(gAnimations) / sizeof(gAnimations[0]);  
   gCurrentPatternNumber = (gCurrentPatternNumber+1) % numberOfPatterns;
+
+  Animation animate = gSequence[gCurrentPatternNumber].mPattern;
+  if (animate == pulseSensor) {
+    PRINT("Selected pulse sensor");
+    setupPulseSensor();
+  } else {
+    PRINT("NOT PULSE SENSOR");
+    disablePulseSensor();
+  }
   
   // Make sure we're on the main animation sequence
   gSequence = gAnimations;
