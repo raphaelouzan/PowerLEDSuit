@@ -18,11 +18,10 @@ int
   minLvlAvg = 0,                                              // For dynamic adjustment of graph low & high
   maxLvlAvg = 512;
   
-int centerPoint = 15;
 
 // TODO diming should be much easier on the eye
 // TODO Avoid flickering on the ey
-uint8_t soundAnimate(uint8_t randomPosition, uint8_t fakeTop) {
+uint8_t soundAnimate(uint8_t fakeNoise, uint8_t fakeTop) {
 
   static uint8_t startIndex = 0;
   
@@ -32,7 +31,7 @@ uint8_t soundAnimate(uint8_t randomPosition, uint8_t fakeTop) {
    
   n = analogRead(MIC_PIN);                                    // Raw reading from mic
   n = abs(n - 512 - DC_OFFSET);                               // Center on zero
-
+  
   n = (n <= NOISE) ? 0 : (n - NOISE);                         // Remove noise/hum
   lvl = ((lvl * 7) + n) >> 3;                                 // "Dampened" reading (else looks twitchy)
  
@@ -42,37 +41,22 @@ uint8_t soundAnimate(uint8_t randomPosition, uint8_t fakeTop) {
   if (height < 0L)       height = 0;                          // Clip output
   else if (height > TOP) height = TOP;
   if (height > peak)     peak   = height;                     // Keep 'peak' dot at top
-
-  if (randomPosition) {
-    for (i=0; i<NUM_LEDS; i++) {
-      int distanceFromCenter = abs(centerPoint - i);
-      if (distanceFromCenter >= (height/2)) {
-        leds[i].setRGB(0, 0, 0);
-      } else {
-        leds[i] = ColorFromPalette(gPalettes[gCurrentPaletteIndex], 90 + map(distanceFromCenter, 0, NUM_LEDS-1, 0, 255), 100, LINEARBLEND);
-      }
-    }
-    //move center point randomly
-    if ((height == 0) && (random(2) == 1)) {
-      centerPoint = random(NUM_LEDS);
-    }
-  } else { // classic VU meter
-    // Color pixels based on rainbow gradient
-    for (i=0; i<NUM_LEDS; i++) {
-      if (i >= height)  leds[i].setRGB(0, 0, 0);
-      else leds[i] = ColorFromPalette(gPalettes[gCurrentPaletteIndex], 90 + map(i, 0, NUM_LEDS-1, 0, 255), 100, LINEARBLEND);
-    }
-    // Draw peak dot  
-    if (peak > 0 && peak <= NUM_LEDS-1) leds[peak] = CHSV(map(peak,0,NUM_LEDS-1,30,150), 255, 255);
+ 
+  // Color pixels based on rainbow gradient
+  for (i=0; i<NUM_LEDS; i++) {
+    if (i >= height)  leds[i].setRGB( 0,0, 0);
+    else leds[i] = ColorFromPalette(gPalettes[gCurrentPaletteIndex], 90 + map(i, 0, NUM_LEDS-1, 0, 255), 100, BLEND);
   }
+ 
+  // Draw peak dot  
+  if (peak > 0 && peak <= NUM_LEDS-1) leds[peak] = CHSV(map(peak,0,NUM_LEDS-1,30,150), 255, 255);
 
-  
   // Every few frames, make the peak pixel drop by 1:
 
-  if (++dotCount >= PEAK_FALL) {                            // fall rate 
-    if (peak > 0) peak--;
-    dotCount = 0;
-  }
+    if (++dotCount >= PEAK_FALL) {                            // fall rate 
+      if(peak > 0) peak--;
+      dotCount = 0;
+    }
   
   vol[volCount] = n;                                          // Save sample for dynamic leveling
   if (++volCount >= SAMPLES) volCount = 0;                    // Advance/rollover sample counter
