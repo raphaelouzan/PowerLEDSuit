@@ -5,7 +5,7 @@ DebugUtils.h - Simple debugging utilities.
 #ifndef DEBUGUTILS_H
 #define DEBUGUTILS_H
 
-#include <WProgram.h>
+#include <Arduino.h>
 
 #ifdef DEBUG
 
