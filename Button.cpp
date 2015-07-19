@@ -133,7 +133,7 @@ void Button::tick(void)
       if (_pressFunc) _pressFunc();
 	  if (_longPressStartFunc) _longPressStartFunc();
 	  if (_duringLongPressFunc) _duringLongPressFunc();
-      _state = 6; // step to state 6
+      _state = 16; // step to state 16
       
     } else {
       // wait. Stay in this state.
@@ -151,20 +151,22 @@ void Button::tick(void)
 
   } else if (_state == 3) { // waiting for menu pin being released finally.
     if (buttonLevel == _buttonReleased) {
+      _state = 4;
+    }
+  } else if (_state == 4) {
+    if (now > _startTime + _clickTicks*2) {
       // this was a 2 click sequence.
       if (_doubleClickFunc) _doubleClickFunc();
-      _state = 4; // restart.
-    } // if
-
-  } else if (_state == 4) { 
-    if (buttonLevel == _buttonPressed) { 
-      // TODO Triple click always follows a double as of now
-      // TODO Should check timing for that 
-      if (_tripleClickFunc) _tripleClickFunc();
+      _state = 0; // restart.
+    } else if (buttonLevel == _buttonPressed) {
+      _state = 5;
     }
-    _state = 0;
-
-  } else if (_state == 6) { // waiting for menu pin being release after long press.
+  } else if (_state == 5) {
+    if (buttonLevel == _buttonReleased) {
+      if (_tripleClickFunc) _tripleClickFunc();
+      _state = 0;
+    }
+  } else if (_state == 16) { // waiting for menu pin being release after long press.
     if (buttonLevel == _buttonReleased) {
 	  _isLongPressed = false;  // Keep track of long press state
 	  if(_longPressStopFunc) _longPressStopFunc();
