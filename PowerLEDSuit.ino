@@ -1,5 +1,6 @@
 #include <FastLED.h>                                          
 #include <Wire.h>
+#include <CapPin.h>
 
 #define DEBUG
 #include "DebugUtils.h"
@@ -7,10 +8,8 @@
 /** 
  * Variable Components
  */
-#define USE_COLOR_SENSOR 0
 #define USE_RING         1
 
-  
 /** 
  * LEDS
  */
@@ -19,9 +18,9 @@
 // Number of LEDs for the front side of the suit (will be mirrored on what's left of the strip in the back)
 #define NUM_LEDS        40                                    
 #define LED_PIN         6
-#define RING_PIN        9
+#define RING_PIN        2
 // Ring must be connected to RING_PIN
-#define RING_SIZE       24
+#define RING_SIZE       60
 #define REVERSE_LEDS    0
       
 #define DEFAULT_BRIGHTNESS 120                           
@@ -34,14 +33,6 @@ struct CRGB leds[STRIP_SIZE];
 #include "Button.h"
 #define BUTTON_PIN      12
 Button button(BUTTON_PIN, true);
-
-/** 
- * Color Sensor 
- */ 
-#if USE_COLOR_SENSOR
-#include "Adafruit_TCS34725.h"
-#include "ColorSensor.h"
-#endif 
 
 /** 
  * Animations
@@ -90,7 +81,7 @@ AnimationPattern gAnimations[] = {
   {breathing2, 40000, 0},
   
   {ripple,  60,  40},
- 
+
   {sinelon,  7, 32},
   {sinelon,  7, 4},
   
@@ -157,9 +148,6 @@ void setup() {
   button.attachLongPressStop(onLongPressEnd);
   button.attachTripleClick(onTripleClick);
   
-#if USE_COLOR_SENSOR
-  setupColorSensor();
-#endif
 
 } 
 
@@ -191,10 +179,6 @@ void onDoubleClick() {
 
 void onLongPressStart() { 
   PRINT("Loading up, up, up... ");
-    
-#if USE_COLOR_SENSOR
-  sampleColor();  
-#endif
   
   gSequence = gDropAnimations;
   gCurrentPatternNumber = 0;
