@@ -2,31 +2,34 @@
 #include <Wire.h>
 #include <CapPin.h>
 
-#define DEBUG
-#include "DebugUtils.h"
-
 /** 
  * Variable Components
  */
-#define USE_RING         1
+#define USE_2ND_STRIP    0
+#define DEBUG
+#include "DebugUtils.h"
+
 
 /** 
  * LEDS
- */
+ */   
 // Size of the strip, including both front and back of the strip
 #define STRIP_SIZE      60
+#define LED_PIN         6
+struct CRGB leds[STRIP_SIZE];  
+
+#if USE_2ND_STRIP
+#define LED2_PIN        2
+struct CRGB leds2[STRIP_SIZE];  
+#endif
+
 // Number of LEDs for the front side of the suit (will be mirrored on what's left of the strip in the back)
 #define NUM_LEDS        40                                    
-#define LED_PIN         6
-#define RING_PIN        2
-// Ring must be connected to RING_PIN
-#define RING_SIZE       60
 #define REVERSE_LEDS    0
       
 #define DEFAULT_BRIGHTNESS 120                           
 
-struct CRGB leds[STRIP_SIZE];                              
-
+                           
 /** 
  * Button Switcher
  */ 
@@ -131,8 +134,9 @@ void setup() {
 
   // LEDs
   FastLED.addLeds<NEOPIXEL, LED_PIN>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
-#if USE_RING
-  FastLED.addLeds<NEOPIXEL, RING_PIN>(leds, RING_SIZE).setCorrection(TypicalLEDStrip);
+  
+#if USE_2ND_STRIP
+  FastLED.addLeds<NEOPIXEL, LED2_PIN>(leds2, STRIP_SIZE).setCorrection(TypicalLEDStrip);
 #endif
 
   FastLED.setBrightness(DEFAULT_BRIGHTNESS);
@@ -247,12 +251,19 @@ void loop() {
   #if REVERSE_LEDS
     reverseLeds();
   #endif  
+  
+  #ifdef DEBUG
+  EVERY_N_MILLISECONDS(500) {PRINTX("FPS:", FastLED.getFPS());}
+  #endif
 } 
 
 void mirrorLeds() { 
 
   for (int i = STRIP_SIZE-1, x = 0; i >= NUM_LEDS; i--, x++) { 
     leds[i] = leds[x];
+#if USE_2ND_STRIP
+    leds2[i] = leds[x];
+#endif
   }
   
 }
@@ -266,3 +277,5 @@ void reverseLeds() {
     leds[right--] = temp;
   }
 }
+
+
