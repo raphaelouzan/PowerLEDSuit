@@ -77,6 +77,9 @@ void fadeLEDs(int fadeVal){
 
 uint8_t pulseSensor(uint8_t arg0, uint8_t arg1) {
 //  PRINTX("Signal: ", Signal);
+
+  leds[0] = Pulse ? CRGB::Red : CRGB::Black;
+  
   if (QS) {
     PRINT("Got QS");
     QS = false;
