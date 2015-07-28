@@ -16,6 +16,11 @@ typedef struct {
 } AnimationPattern;
  
 
+// TODO Currently only SoundReactive uses these palettes, more animations should use them
+// and blend in between for nice transitions
+CRGBPalette16 gPalettes[] = {HeatColors_p, LavaColors_p, RainbowColors_p, 
+    CloudColors_p, OceanColors_p, ForestColors_p, PartyColors_p};
+uint8_t gCurrentPaletteIndex = 0;
 
 uint8_t gHue = 0;
 
@@ -300,10 +305,10 @@ uint8_t multiFire(uint8_t cooling, uint8_t sparking) {
 // or focus on the middle and expand from there
 uint8_t aboutToDrop(uint8_t a, uint8_t b) {
   
-  static int bpmAmount = 2;
+  static uint8_t bpmAmount = 2;
 
   sinelon(bpmAmount++, 0  );
-  bpmAmount = ++bpmAmount % 160;
+  bpmAmount %= 160;
   
   return NO_DELAY;
 }

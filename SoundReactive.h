@@ -21,8 +21,6 @@ int
 // TODO diming should be much easier on the eye
 // TODO Avoid flickering on the ey
 uint8_t soundAnimate(uint8_t fakeNoise, uint8_t fakeTop) {
-
-  static uint8_t startIndex = 0;
   
   uint8_t  i;
   uint16_t minLvl, maxLvl;

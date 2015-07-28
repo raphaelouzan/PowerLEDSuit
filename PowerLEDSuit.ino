@@ -4,8 +4,8 @@
 /** 
  * Variable Components
  */
-#define USE_2ND_STRIP    1
-#define USE_TOUCHSENSORS 1
+#define USE_2ND_STRIP    0
+#define USE_TOUCHSENSORS 0
 #define USE_SETTINGS     1
 #define DEBUG
 #include "DebugUtils.h"
@@ -43,7 +43,7 @@ Button button(BUTTON_PIN, true);
  */ 
 #if USE_TOUCHSENSORS
 #define I2C_MASTER_ID 4
-typedef enum {
+enum {
   LEFT_PRESSED = 0, 
   LEFT_RELEASED = 1, 
   RIGHT_PRESSED = 2, 
@@ -56,11 +56,6 @@ typedef enum {
  * Animations
  */ 
 #include "Animations.h"
-// TODO Currently only SoundReactive uses these palettes, more animations should use them
-// and blend in between for nice transitions
-CRGBPalette16 gPalettes[] = {HeatColors_p, LavaColors_p, RainbowColors_p, 
-    CloudColors_p, OceanColors_p, ForestColors_p, PartyColors_p};
-uint8_t gCurrentPaletteIndex = 0;
 
 /* 
  * Settings UI
@@ -299,7 +294,6 @@ void loop() {
   
   button.tick();
   
-  
   uint8_t arg1 = gSequence[gCurrentPatternNumber].mArg1;
   uint8_t arg2 = gSequence[gCurrentPatternNumber].mArg2;
   Animation animate = gSequence[gCurrentPatternNumber].mPattern;
@@ -313,18 +307,14 @@ void loop() {
   #endif
   
   switch(animDelay) { 
- 
-    // TODO Needed for development? 
-//    case NO_DELAY:
-//      delay_at_max_brightness_for_power(70);
-      
+       
     case STATIC_DELAY: 
       delay_at_max_brightness_for_power(70);
       break;
       
     case RANDOM_DELAY: 
       // Sync random delay to an increasing BPM as the animations progress 
-      uint8_t bpmDelay = beatsin8(gCurrentPatternNumber, 100, 450);
+      uint8_t bpmDelay = beatsin8(gCurrentPatternNumber, 100, 255);
       delay_at_max_brightness_for_power(bpmDelay);
       break;
  
@@ -342,7 +332,7 @@ void loop() {
   EVERY_N_MILLISECONDS(2000) {PRINTX("FREE RAM:", freeRam());}
   #endif
   
-  EVERY_N_MILLISECONDS(1000)  { gHue++; }
+  EVERY_N_MILLISECONDS(700)  { gHue++; }
 } 
 
 
