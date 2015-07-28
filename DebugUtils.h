@@ -30,6 +30,12 @@ DebugUtils.h - Simple debugging utilities.
      Serial.print(" "); \
      Serial.println(obj);
      
+  int freeRam () {
+    extern int __heap_start, *__brkval; 
+    int v; 
+    return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+  }
+     
 #else
 
   #define PRINT(str)

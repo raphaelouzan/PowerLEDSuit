@@ -4,8 +4,8 @@
 /** 
  * Variable Components
  */
-#define USE_2ND_STRIP    0
-#define USE_TOUCHSENSORS 0
+#define USE_2ND_STRIP    1
+#define USE_TOUCHSENSORS 1
 #define USE_SETTINGS     1
 #define DEBUG
 #include "DebugUtils.h"
@@ -81,8 +81,6 @@ uint8_t gCurrentPaletteIndex = 0;
  */
 
 AnimationPattern gAnimations[] = {
-  
-  {fadeOut, 255, 0}, 
   
   {soundAnimate, 5, 5},
 
@@ -340,11 +338,11 @@ void loop() {
   #endif  
   
   #ifdef DEBUG
-  EVERY_N_MILLISECONDS(500) {PRINTX("FPS:", FastLED.getFPS());}
+  EVERY_N_MILLISECONDS(500)  {PRINTX("FPS:", FastLED.getFPS());}
+  EVERY_N_MILLISECONDS(2000) {PRINTX("FREE RAM:", freeRam());}
   #endif
   
-  EVERY_N_MILLISECONDS(1000) { gHue++; }
-  
+  EVERY_N_MILLISECONDS(1000)  { gHue++; }
 } 
 
 
