@@ -314,7 +314,6 @@ uint8_t dropped(uint8_t a, uint8_t b) {
 }
 
 uint8_t fadeOut(uint8_t fadeAmount, uint8_t b) { 
-  PRINTX("Fading to black by... ", fadeAmount);
   fadeToBlackBy(leds, NUM_LEDS, fadeAmount);
   return STATIC_DELAY;
 }
