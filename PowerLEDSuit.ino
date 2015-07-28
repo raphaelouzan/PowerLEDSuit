@@ -1,11 +1,12 @@
 #include <FastLED.h>                                          
 #include <Wire.h>
-#include <CapPin.h>
 
 /** 
  * Variable Components
  */
 #define USE_2ND_STRIP    0
+#define USE_TOUCHSENSORS 0
+#define USE_SETTINGS     1
 #define DEBUG
 #include "DebugUtils.h"
 
@@ -19,7 +20,7 @@
 struct CRGB leds[STRIP_SIZE];  
 
 #if USE_2ND_STRIP
-#define LED2_PIN        2
+#define LED2_PIN        9
 struct CRGB leds2[STRIP_SIZE];  
 #endif
 
@@ -37,6 +38,20 @@ struct CRGB leds2[STRIP_SIZE];
 #define BUTTON_PIN      12
 Button button(BUTTON_PIN, true);
 
+/**
+ * Touch Sensors
+ */ 
+#if USE_TOUCHSENSORS
+#define I2C_MASTER_ID 4
+typedef enum {
+  LEFT_PRESSED = 0, 
+  LEFT_RELEASED = 1, 
+  RIGHT_PRESSED = 2, 
+  RIGHT_RELEASED = 3, 
+  BOTH_PRESSED = 4, 
+  BOTH_RELEASED = 5};
+#endif
+
 /** 
  * Animations
  */ 
@@ -50,7 +65,9 @@ uint8_t gCurrentPaletteIndex = 0;
 /* 
  * Settings UI
  */
+#if USE_SETTINGS
 #include "SettingsMode.h"
+#endif
 
 /**
  * Microphone
@@ -62,15 +79,10 @@ uint8_t gCurrentPaletteIndex = 0;
 /**
  * Sequencing
  */
-typedef uint8_t (*Animation)(uint8_t arg1, uint8_t arg2);
-typedef struct { 
-  Animation mPattern;
-  uint8_t mArg1;
-  uint8_t mArg2;
-} AnimationPattern;
- 
 
 AnimationPattern gAnimations[] = {
+  
+  {fadeOut, 255, 0}, 
   
   {soundAnimate, 5, 5},
 
@@ -81,7 +93,7 @@ AnimationPattern gAnimations[] = {
   // TODO Fix or kill
   {breathing, 16, 64},
   
-  {breathing2, 40000, 0},
+  {breathing2, 255, 0},
   
   {ripple,  60,  40},
 
@@ -114,11 +126,20 @@ AnimationPattern gDropAnimations[] = {
   {aboutToDrop, 100, 200},
   {dropped, 100, 200}
 };
+
+#if USE_TOUCHSENSORS
+AnimationPattern gTouchAnimations[] = { 
+  {sinelon, 120, 4}, 
+  {juggle, 30, 120},
+  {bpm, 120, 5}, 
+  {fadeOut, 255, 0}
+};
+#endif
  
 // Default sequence to main animations
-AnimationPattern* gSequence = gAnimations; 
+volatile AnimationPattern* gSequence = gAnimations; 
 // Index number of which pattern is current
-uint8_t gCurrentPatternNumber = 0; 
+volatile uint8_t gCurrentPatternNumber = 0; 
 
 
 /**
@@ -152,18 +173,78 @@ void setup() {
   button.attachLongPressStop(onLongPressEnd);
   button.attachTripleClick(onTripleClick);
   
-
+#if USE_TOUCHSENSORS  
+  Wire.begin(I2C_MASTER_ID);             
+  Wire.onReceive(onReceive);
+#endif   
 } 
-
+  
 /**
- * Click Handlers
+ * Event Handlers
  */
+#if USE_TOUCHSENSORS
+
+void onReceive(int size) { 
+  byte r = Wire.read();
+  
+  PRINTX("I2C Received ", r);
+  switch (r) { 
+    case LEFT_PRESSED:   digitalWrite(7, HIGH); 
+    onLeftTouched(false); 
+    break;
+    case LEFT_RELEASED:  digitalWrite(7, LOW); 
+    PRINT("Left released!");
+    onLeftTouched(true); 
+    break;
+    case RIGHT_PRESSED:  digitalWrite(7, HIGH); onRightTouched(false); break;
+    case RIGHT_RELEASED: digitalWrite(7, LOW); 
+    onRightTouched(true); 
+    break; 
+    case BOTH_PRESSED: onBothTouched(false); break;
+    case BOTH_RELEASED: onBothTouched(true); break;
+  }
+ 
+}
+
+// TODO double touch to activate sensors
+// double, double touch bring it back to normal
+void onLeftTouched(bool isReleased) { 
+  PRINTX("Left Touch - released? :", isReleased);
+
+  gCurrentPatternNumber = 0;
+  gSequence = gTouchAnimations;
+  
+  if (isReleased) { 
+    // Clear out the strip 
+    gCurrentPatternNumber = 3;
+  } 
+}
+
+void onRightTouched(bool isReleased) { 
+  PRINTX("Right Touch - released? :", isReleased);
+  
+  gCurrentPatternNumber = 1;
+  gSequence = gTouchAnimations;
+  
+  if (isReleased) { 
+    // Clear out the strip 
+    gCurrentPatternNumber = 3;
+  } 
+}
+
+void onBothTouched(bool isReleased) { 
+  PRINT("Both touched!");
+  gCurrentPatternNumber = 2;
+  gSequence = gTouchAnimations;
+}
+
+#endif
 
 void onClick() { 
   PRINT("Next animation");
   
-  static const int numberOfPatterns = sizeof(gAnimations) / sizeof(gAnimations[0]);  
-  gCurrentPatternNumber = (gCurrentPatternNumber+1) % numberOfPatterns;
+  gCurrentPatternNumber = (gCurrentPatternNumber+1) % 
+    (sizeof(gAnimations) / sizeof(gAnimations[0]));
   
   // Make sure we're on the main animation sequence
   gSequence = gAnimations;
@@ -199,6 +280,7 @@ void onLongPressEnd() {
 }
 
 void onTripleClick() { 
+#if USE_SETTINGS  
   PRINT("Opening settings");
   
   SettingsMode settings = SettingsMode(&button);
@@ -207,7 +289,9 @@ void onTripleClick() {
   uint8_t brightness = settings.getUserBrightness();
   PRINTX("TripleClick - New brightness: ", brightness);
   FastLED.setBrightness(brightness); 
+#endif  
 }
+
 
 /** 
  * Loop and LED management
@@ -217,13 +301,12 @@ void loop() {
   
   button.tick();
   
+  
   uint8_t arg1 = gSequence[gCurrentPatternNumber].mArg1;
   uint8_t arg2 = gSequence[gCurrentPatternNumber].mArg2;
   Animation animate = gSequence[gCurrentPatternNumber].mPattern;
   
   uint8_t animDelay = animate(arg1, arg2);
-  
-  gHue++;
 
   mirrorLeds();
   
@@ -232,7 +315,11 @@ void loop() {
   #endif
   
   switch(animDelay) { 
-    
+ 
+    // TODO Needed for development? 
+//    case NO_DELAY:
+//      delay_at_max_brightness_for_power(70);
+      
     case STATIC_DELAY: 
       delay_at_max_brightness_for_power(70);
       break;
@@ -255,17 +342,20 @@ void loop() {
   #ifdef DEBUG
   EVERY_N_MILLISECONDS(500) {PRINTX("FPS:", FastLED.getFPS());}
   #endif
+  
+  EVERY_N_MILLISECONDS(1000) { gHue++; }
+  
 } 
 
-void mirrorLeds() { 
 
+void mirrorLeds() { 
   for (int i = STRIP_SIZE-1, x = 0; i >= NUM_LEDS; i--, x++) { 
+    
     leds[i] = leds[x];
 #if USE_2ND_STRIP
     leds2[i] = leds[x];
 #endif
   }
-  
 }
 
 void reverseLeds() {

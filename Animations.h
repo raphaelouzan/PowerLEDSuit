@@ -8,6 +8,14 @@ STATIC_DELAY = 3,
 NO_DELAY     = 1
 } delayType;
 
+typedef uint8_t (*Animation)(uint8_t arg1, uint8_t arg2);
+typedef struct { 
+  Animation mPattern;
+  uint8_t mArg1;
+  uint8_t mArg2;
+} AnimationPattern;
+ 
+
 
 uint8_t gHue = 0;
 
@@ -198,7 +206,7 @@ const uint8_t KEYFRAMES[]  = {
 
 
 
-uint8_t breathing2(uint8_t breathingCycleTime = 5000, uint8_t baseColorFake = 0) {
+uint8_t breathing2(uint8_t breathingCycleTime = 255, uint8_t baseColorFake = 0) {
   
   static unsigned long lastBreath = 0.0;
   static int keyframePointer = 0;
@@ -305,4 +313,9 @@ uint8_t dropped(uint8_t a, uint8_t b) {
   return NO_DELAY;
 }
 
+uint8_t fadeOut(uint8_t fadeAmount, uint8_t b) { 
+  PRINTX("Fading to black by... ", fadeAmount);
+  fadeToBlackBy(leds, NUM_LEDS, fadeAmount);
+  return STATIC_DELAY;
+}
 
