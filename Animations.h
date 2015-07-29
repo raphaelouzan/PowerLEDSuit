@@ -1,21 +1,20 @@
 #include <FastLed.h>
 
-#define RIPPLE_FADE_RATE 255
-
-typedef enum delayType {
-RANDOM_DELAY = 2,
-STATIC_DELAY = 3, 
-NO_DELAY     = 1
-} delayType;
-
 typedef uint8_t (*Animation)(uint8_t arg1, uint8_t arg2);
 typedef struct { 
   Animation mPattern;
   uint8_t mArg1;
   uint8_t mArg2;
 } AnimationPattern;
- 
 
+typedef enum delayType {
+  RANDOM_DELAY = 2,
+  STATIC_DELAY = 3, 
+  NO_DELAY     = 1
+} delayType;
+
+#define RIPPLE_FADE_RATE 255
+ 
 // TODO Currently only SoundReactive uses these palettes, more animations should use them
 // and blend in between for nice transitions
 CRGBPalette16 gPalettes[] = {HeatColors_p, LavaColors_p, RainbowColors_p, 
@@ -294,6 +293,51 @@ uint8_t multiFire(uint8_t cooling, uint8_t sparking) {
    return fire(cooling, sparking, pal); 
 }
 
+// From Marks Kriegman's https://gist.github.com/kriegsman/964de772d64c502760e5
+uint8_t pride(uint8_t a, uint8_t b) 
+{
+  static uint16_t sPseudotime = 0;
+  static uint16_t sLastMillis = 0;
+  static uint16_t sHue16 = 0;
+ 
+  uint8_t sat8 = beatsin88(87, 220, 250);
+  uint8_t brightdepth = beatsin88(341, 96, 224);
+  uint16_t brightnessthetainc16 = beatsin88(203, (25 * 256), (40 * 256));
+  uint8_t msmultiplier = beatsin88(147, 23, 60);
+
+  uint16_t hue16 = sHue16;//gHue * 256;
+  uint16_t hueinc16 = beatsin88(113, 1, 3000);
+  
+  uint16_t ms = millis();
+  uint16_t deltams = ms - sLastMillis ;
+  sLastMillis  = ms;
+  sPseudotime += deltams * msmultiplier;
+  sHue16 += deltams * beatsin88( 400, 5,9);
+  uint16_t brightnesstheta16 = sPseudotime;
+  
+  for(uint16_t i = 0 ; i < NUM_LEDS; i++) {
+    
+    hue16 += hueinc16;
+    uint8_t hue8 = hue16 / 256;
+
+    brightnesstheta16  += brightnessthetainc16;
+    uint16_t b16 = sin16( brightnesstheta16  ) + 32768;
+
+    uint16_t bri16 = (uint32_t)((uint32_t)b16 * (uint32_t)b16) / 65536;
+    uint8_t bri8 = (uint32_t)(((uint32_t)bri16) * brightdepth) / 65536;
+    bri8 += (255 - brightdepth);
+    
+    CRGB newcolor = CHSV(hue8, sat8, bri8);
+    
+    uint16_t pixelnumber = i;
+    pixelnumber = (NUM_LEDS-1) - pixelnumber;
+    
+    nblend(leds[pixelnumber], newcolor, 64);
+  }
+  
+  return STATIC_DELAY;
+}
+
 
 /*
  * Drop Animations
@@ -317,6 +361,10 @@ uint8_t dropped(uint8_t a, uint8_t b) {
   bpm(125, random(5, 10));
   return NO_DELAY;
 }
+
+/*
+ * Touch Animations
+ */ 
 
 uint8_t fadeOut(uint8_t fadeAmount, uint8_t b) { 
   fadeToBlackBy(leds, NUM_LEDS, fadeAmount);

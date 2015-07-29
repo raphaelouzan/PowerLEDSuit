@@ -69,7 +69,7 @@ enum {
  */
 #define MIC_PIN A10
 #include "SoundReactive.h"
-
+  
 
 /**
  * Sequencing
@@ -110,6 +110,8 @@ AnimationPattern gAnimations[] = {
   {confetti, 20, 10},
   {confetti, 16,  3}, 
 
+  {pride,    0,   0}, 
+  
   {bpm,      15,  2},
   {bpm,      62,  3},
   {bpm,      125, 7}
@@ -327,12 +329,12 @@ void loop() {
     reverseLeds();
   #endif  
   
+  gHue++;
+    
   #ifdef DEBUG
   EVERY_N_MILLISECONDS(500)  {PRINTX("FPS:", FastLED.getFPS());}
   EVERY_N_MILLISECONDS(2000) {PRINTX("FREE RAM:", freeRam());}
   #endif
-  
-  EVERY_N_MILLISECONDS(700)  { gHue++; }
 } 
 
 
