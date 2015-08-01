@@ -4,10 +4,9 @@
 /** 
  * Variable Components
  */
-#define USE_2ND_STRIP    0
-#define USE_TOUCHSENSORS 0
+#define USE_2ND_STRIP    1
+#define USE_TOUCHSENSORS 1
 #define USE_SETTINGS     1
-#define DEBUG
 #include "DebugUtils.h"
 
 
@@ -28,7 +27,7 @@ struct CRGB leds2[STRIP_SIZE];
 #define NUM_LEDS        40                                    
 #define REVERSE_LEDS    0
       
-#define DEFAULT_BRIGHTNESS 120                           
+#define DEFAULT_BRIGHTNESS 160                           
 
                            
 /** 
@@ -76,6 +75,12 @@ enum {
  */
 
 AnimationPattern gAnimations[] = {
+  
+  {breathing, 16, 64},
+  
+  {discostrobe, 120, 4}, 
+  
+  {discostrobe, 120, 8},
   
   {soundAnimate, 5, 5},
 
@@ -252,6 +257,8 @@ void onDoubleClick() {
     // We're already at the first animation - spice things up 
     gCurrentPaletteIndex = (gCurrentPaletteIndex + 1) 
         % (sizeof(gPalettes) / sizeof(gPalettes[0]));
+    // TODO should use nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);     
+        
   } else {
     gCurrentPatternNumber = 0; 
   }
@@ -339,13 +346,35 @@ void loop() {
 
 
 void mirrorLeds() { 
+  
+  
+  // TODO Optimize! Make the two loops in one
   for (int i = STRIP_SIZE-1, x = 0; i >= NUM_LEDS; i--, x++) { 
-    
     leds[i] = leds[x];
-#if USE_2ND_STRIP
-    leds2[i] = leds[x];
-#endif
   }
+  
+#if USE_2ND_STRIP   
+
+  for (int i = 0; i < NUM_LEDS; i++) { 
+    
+    if (gRenderingSettings == LEFT_STRIP_ONLY) {
+      leds2[i] = CRGB::Black;
+    }
+    else if (gRenderingSettings == RIGHT_STRIP_ONLY) { 
+      leds2[i] = leds[i];
+      leds[i] = CRGB::Black;
+    }
+    else if (gRenderingSettings == BOTH_STRIPS) { 
+      leds2[i] = leds[i];
+    }
+#endif  
+
+  }  
+ 
+  // Go back to default
+  gRenderingSettings = BOTH_STRIPS;
+  
+  
 }
 
 void reverseLeds() {
