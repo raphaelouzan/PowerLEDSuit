@@ -5,7 +5,7 @@
  * Variable Components
  */
 #define USE_2ND_STRIP    1
-#define USE_TOUCHSENSORS 1
+#define USE_TOUCHSENSORS 0
 #define USE_SETTINGS     1
 //#define DEBUG
 #include "DebugUtils.h"
@@ -84,22 +84,17 @@ typedef enum {
 
 AnimationPattern gAnimations[] = {
   
-  {breathing, 16, 64},
-  
-  {discostrobe, 120, 4}, 
-  
-  {discostrobe, 120, 8},
-  
   {soundAnimate, 5, 5},
+  
+  {pride,    0,   0}, 
+  
+  {discostrobe, 120, 4},
 
   {blueFire, 100, 200}, 
   
   {multiFire, 100, 100},
   
-  // TODO Fix or kill
   {breathing, 16, 64},
-  
-  {breathing2, 255, 0},
   
   {ripple,  60,  40},
 
@@ -358,18 +353,19 @@ void loop() {
   #endif
   
   switch(animDelay) { 
-       
-    case STATIC_DELAY: 
-      delay_at_max_brightness_for_power(70);
-//      delayToSyncFrameRate(FRAMES_PER_SECOND)
-      break;
-      
-    case RANDOM_DELAY: 
+    
+    case RANDOM_DELAY: {
       // Sync random delay to an increasing BPM as the animations progress 
       uint8_t bpmDelay = beatsin8(gCurrentPatternNumber, 100, 255);
       delay_at_max_brightness_for_power(bpmDelay);
       break;
- 
+    }
+
+    case SYNCED_DELAY: delayToSyncFrameRate(FRAMES_PER_SECOND); break;
+    
+    case STATIC_DELAY: delay_at_max_brightness_for_power(70); break;
+      
+    
   };
 
   show_at_max_brightness_for_power();      
@@ -428,6 +424,17 @@ void reverseLeds() {
     leds[left++] = leds[right];
     leds[right--] = temp;
   }
+}
+
+static void delayToSyncFrameRate( uint8_t framesPerSecond) {
+  static uint32_t msprev = 0;
+  uint32_t mscur = millis();
+  uint16_t msdelta = mscur - msprev;
+  uint16_t mstargetdelta = 1000 / framesPerSecond;
+  if( msdelta < mstargetdelta) {
+    delay_at_max_brightness_for_power(mstargetdelta - msdelta);
+  }
+  msprev = mscur;
 }
 
 

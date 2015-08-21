@@ -10,7 +10,8 @@ typedef struct {
 typedef enum delayType {
   RANDOM_DELAY = 2,
   STATIC_DELAY = 3, 
-  NO_DELAY     = 1
+  NO_DELAY     = 1, 
+  SYNCED_DELAY = 4
 } delayType;
 
 #define LEFT_STRIP_ONLY  1
@@ -43,8 +44,7 @@ uint8_t juggle(uint8_t numDots, uint8_t baseBpmSpeed) {
 }
  
 
-uint8_t bpm(uint8_t bpmSpeed, uint8_t stripeWidth)
-{
+uint8_t bpm(uint8_t bpmSpeed, uint8_t stripeWidth) {
   // colored stripes pulsing at a defined Beats-Per-Minute (BPM)
   CRGBPalette16 palette = PartyColors_p;
   uint8_t beat = beatsin8(bpmSpeed, 64, 255);
@@ -56,8 +56,7 @@ uint8_t bpm(uint8_t bpmSpeed, uint8_t stripeWidth)
 
 }
 
-uint8_t sinelon(uint8_t bpmSpeed, uint8_t fadeAmount)
-{
+uint8_t sinelon(uint8_t bpmSpeed, uint8_t fadeAmount) {
   // a colored dot sweeping back and forth, with fading trails
   fadeToBlackBy(leds, NUM_LEDS, fadeAmount);
   int pos = beatsin16(bpmSpeed, 0, NUM_LEDS);
@@ -67,8 +66,7 @@ uint8_t sinelon(uint8_t bpmSpeed, uint8_t fadeAmount)
 }
 
 // An animation to play while the crowd goes wild after the big performance
-uint8_t applause(uint8_t minHue, uint8_t maxHue)
-{
+uint8_t applause(uint8_t minHue, uint8_t maxHue) {
   static uint16_t lastPixel = 0;
   fadeToBlackBy(leds, NUM_LEDS, 32);
   leds[lastPixel] = CHSV(random8(minHue, maxHue), 255, 255);
@@ -78,8 +76,7 @@ uint8_t applause(uint8_t minHue, uint8_t maxHue)
   return RANDOM_DELAY;
 }
 
-uint8_t confetti(uint8_t colorVariation, uint8_t fadeAmount)
-{
+uint8_t confetti(uint8_t colorVariation, uint8_t fadeAmount) {
   // random colored speckles that blink in and fade smoothly
   fadeToBlackBy(leds, NUM_LEDS, fadeAmount);
   int pos = random16(NUM_LEDS);
@@ -215,47 +212,6 @@ uint8_t breathing(uint8_t bpmSpeed, uint8_t fadeAmount) {
   return STATIC_DELAY; 
 }
 
-const uint8_t KEYFRAMES[]  = {
-  // Rising
-  20, 21, 22, 24, 26, 28, 31, 34, 38, 41, 45, 50, 55, 60, 66, 73, 80, 87, 95,
-  103, 112, 121, 131, 141, 151, 161, 172, 182, 192, 202, 211, 220, 228, 236,
-  242, 247, 251, 254, 255,
-
-  // Falling
-  254, 251, 247, 242, 236, 228, 220, 211, 202, 192, 182, 172, 161, 151, 141,
-  131, 121, 112, 103, 95, 87, 80, 73, 66, 60, 55, 50, 45, 41, 38, 34, 31, 28,
-  26, 24, 22, 21, 20,
-  20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 
-};
-
-
-
-
-uint8_t breathing2(uint8_t breathingCycleTime = 255, uint8_t baseColorFake = 0) {
-  
-  static unsigned long lastBreath = 0.0;
-  static int keyframePointer = 0;
-
-  int numKeyframes = sizeof(KEYFRAMES) - 1;
-  float period = breathingCycleTime / numKeyframes;
-  unsigned long now = millis();
-  
-  if ((now - lastBreath) > period) {
-    lastBreath = now;
-
-    for (int i = 0; i < NUM_LEDS; i++) {
-      uint8_t color = (127 * KEYFRAMES[keyframePointer]) / 256;
-      leds[i] = color;
-    } 
-
-    // Increment the keyframe pointer.
-    if (++keyframePointer > numKeyframes) {
-      // Reset to 0 after the last keyframe.
-      keyframePointer = 0;
-    }   
-  }
-  return STATIC_DELAY;
-}
 
 // @param COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
@@ -265,8 +221,7 @@ uint8_t breathing2(uint8_t breathingCycleTime = 255, uint8_t baseColorFake = 0) 
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
 
-uint8_t fire(uint8_t cooling, uint8_t sparking, const CRGBPalette16& palette)
-{
+uint8_t fire(uint8_t cooling, uint8_t sparking, const CRGBPalette16& palette) {
 
   // Array of temperature readings at each simulation cell
   static byte heat[NUM_LEDS];
@@ -315,8 +270,7 @@ uint8_t multiFire(uint8_t cooling, uint8_t sparking) {
 }
 
 // From Marks Kriegman's https://gist.github.com/kriegsman/964de772d64c502760e5
-uint8_t pride(uint8_t a, uint8_t b) 
-{
+uint8_t pride(uint8_t a, uint8_t b) {
   static uint16_t sPseudotime = 0;
   static uint16_t sLastMillis = 0;
   static uint16_t sHue16 = 0;
@@ -471,8 +425,7 @@ void discoWorker(
 }
 
 
-uint8_t discostrobe(uint8_t zoomBPM = 120, uint8_t strobeCycleLength = 4)
-{
+uint8_t discostrobe(uint8_t zoomBPM = 120, uint8_t strobeCycleLength = 4) {
   // First, we black out all the LEDs
   fill_solid(leds, NUM_LEDS, CRGB::Black);
 
@@ -550,6 +503,6 @@ uint8_t discostrobe(uint8_t zoomBPM = 120, uint8_t strobeCycleLength = 4)
     discoWorker(dashperiod, dashwidth, dashmotionspeed, strobesPerPosition, hueShift);
   }  
   
-  return NO_DELAY;
+  return SYNCED_DELAY;
 }
 
