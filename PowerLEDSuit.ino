@@ -7,6 +7,7 @@
 #define USE_2ND_STRIP    1
 #define USE_TOUCHSENSORS 1
 #define USE_SETTINGS     1
+//#define DEBUG
 #include "DebugUtils.h"
 
 
@@ -28,7 +29,7 @@ struct CRGB leds2[STRIP_SIZE];
 #define REVERSE_LEDS    0
       
 #define DEFAULT_BRIGHTNESS 160                           
-
+#define FRAMES_PER_SECOND  100
                            
 /** 
  * Button Switcher
@@ -42,13 +43,20 @@ Button button(BUTTON_PIN, true);
  */ 
 #if USE_TOUCHSENSORS
 #define I2C_MASTER_ID 4
-enum {
+typedef enum {
   LEFT_PRESSED = 0, 
   LEFT_RELEASED = 1, 
   RIGHT_PRESSED = 2, 
   RIGHT_RELEASED = 3, 
   BOTH_PRESSED = 4, 
-  BOTH_RELEASED = 5};
+  BOTH_RELEASED = 5, 
+  BOTTOM_LEFT_PRESSED = 6, 
+  BOTTOM_LEFT_RELEASED = 7, 
+  BOTTOM_RIGHT_PRESSED = 8, 
+  BOTTOM_RIGHT_RELEASED = 9, 
+  HUG_PRESSED = 10, 
+  HUG_RELEASED = 11
+} sensorState;
 #endif
 
 /** 
@@ -187,21 +195,20 @@ void setup() {
 void onReceive(int size) { 
   byte r = Wire.read();
   
-  PRINTX("I2C Received ", r);
+  Serial.println(r);
   switch (r) { 
-    case LEFT_PRESSED:   digitalWrite(7, HIGH); 
-    onLeftTouched(false); 
-    break;
-    case LEFT_RELEASED:  digitalWrite(7, LOW); 
-    PRINT("Left released!");
-    onLeftTouched(true); 
-    break;
+    case LEFT_PRESSED:   digitalWrite(7, HIGH); onLeftTouched(false); break;
+    case LEFT_RELEASED:  digitalWrite(7, LOW); onLeftTouched(true); break;
     case RIGHT_PRESSED:  digitalWrite(7, HIGH); onRightTouched(false); break;
-    case RIGHT_RELEASED: digitalWrite(7, LOW); 
-    onRightTouched(true); 
-    break; 
-    case BOTH_PRESSED: onBothTouched(false); break;
-    case BOTH_RELEASED: onBothTouched(true); break;
+    case RIGHT_RELEASED: digitalWrite(7, LOW); onRightTouched(true); break; 
+    case BOTH_PRESSED: digitalWrite(7, HIGH); onBothTouched(false); break;
+    case BOTH_RELEASED: digitalWrite(7, LOW); onBothTouched(true); break;
+    case BOTTOM_LEFT_PRESSED: digitalWrite(7, HIGH); onBottomLeftTouched(false); break;
+    case BOTTOM_LEFT_RELEASED: digitalWrite(7, LOW); onBottomLeftTouched(true); break;
+    case BOTTOM_RIGHT_PRESSED: digitalWrite(7, HIGH); onBottomRightTouched(false); break;
+    case BOTTOM_RIGHT_RELEASED: digitalWrite(7, LOW); onBottomRightTouched(true); break;
+    case HUG_PRESSED: digitalWrite(7, HIGH); onHugTouched(false); break; 
+    case HUG_RELEASED: digitalWrite(7, LOW); onHugTouched(true); break; 
   }
  
 }
@@ -238,10 +245,52 @@ void onBothTouched(bool isReleased) {
   gSequence = gTouchAnimations;
 }
 
+void onBottomLeftTouched(bool isReleased) { 
+  PRINTX("Bottom Left:", isReleased);  
+  
+  gSequence = gAnimations;
+  gCurrentPatternNumber = 4;
+  
+  if (isReleased) { 
+    gSequence = gTouchAnimations;
+    // Clear out the strip 
+    gCurrentPatternNumber = 3;
+  } 
+}
+
+void onBottomRightTouched(bool isReleased) {
+  PRINTX("Bottom Right:", isReleased); 
+    Serial.println("Bottom right touched");
+  
+  gSequence = gAnimations;
+  gCurrentPatternNumber = 5;
+  
+   if (isReleased) { 
+    gSequence = gTouchAnimations;
+    // Clear out the strip 
+    gCurrentPatternNumber = 3;
+  } 
+}
+
+void onHugTouched(bool isReleased) { 
+  PRINTX("Hug Touched:", isReleased); 
+  
+  gSequence = gDropAnimations;
+  gCurrentPatternNumber = 1;
+  
+  if (isReleased) { 
+    gSequence = gTouchAnimations;
+    // Clear out the strip 
+    gCurrentPatternNumber = 3;
+  } 
+  
+}
+
+
 #endif
 
 void onClick() { 
-  PRINT("Next animation");
+  //Next animation
   
   gCurrentPatternNumber = (gCurrentPatternNumber+1) % 
     (sizeof(gAnimations) / sizeof(gAnimations[0]));
@@ -251,7 +300,7 @@ void onClick() {
 }   
 
 void onDoubleClick() { 
-  PRINT("Reseting to first animation");
+  //Reseting to first animation
 
   if (gCurrentPatternNumber == 0) { 
     // We're already at the first animation - spice things up 
@@ -265,31 +314,24 @@ void onDoubleClick() {
 }
 
 void onLongPressStart() { 
-  PRINT("Loading up, up, up... ");
-  
   gSequence = gDropAnimations;
   gCurrentPatternNumber = 0;
 }
 
 void onDuringLongPress() { 
-  PRINT("More, more, more...");
 }
 
 void onLongPressEnd() { 
-  PRINT("Dropping the bomb");
-  // Activate the drop animation
+  // Drop the bomb
   gCurrentPatternNumber = 1;
 }
 
 void onTripleClick() { 
 #if USE_SETTINGS  
-  PRINT("Opening settings");
-  
   SettingsMode settings = SettingsMode(&button);
   settings.showSettings();
 
   uint8_t brightness = settings.getUserBrightness();
-  PRINTX("TripleClick - New brightness: ", brightness);
   FastLED.setBrightness(brightness); 
 #endif  
 }
@@ -319,6 +361,7 @@ void loop() {
        
     case STATIC_DELAY: 
       delay_at_max_brightness_for_power(70);
+//      delayToSyncFrameRate(FRAMES_PER_SECOND)
       break;
       
     case RANDOM_DELAY: 
