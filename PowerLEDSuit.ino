@@ -7,7 +7,8 @@
 #define USE_2ND_STRIP    1
 #define USE_TOUCHSENSORS 0
 #define USE_SETTINGS     1
-//#define DEBUG
+#define DEBUG
+#define DEBUG_ANIMATIONS
 #include "DebugUtils.h"
 
 
@@ -20,8 +21,9 @@
 struct CRGB leds[STRIP_SIZE];  
 
 #if USE_2ND_STRIP
+#define STRIP2_SIZE     40
 #define LED2_PIN        9
-struct CRGB leds2[STRIP_SIZE];  
+struct CRGB leds2[STRIP2_SIZE];  
 #endif
 
 // Number of LEDs for the front side of the suit (will be mirrored on what's left of the strip in the back)
@@ -83,15 +85,14 @@ typedef enum {
  */
 
 AnimationPattern gAnimations[] = {
-  
+    
   {soundAnimate, 5, 5},
   
   {pride,    0,   0}, 
   
   {discostrobe, 120, 4},
-
-  {blueFire, 100, 200}, 
   
+  {blueFire, 100, 200}, 
   {multiFire, 100, 100},
   
   {breathing, 16, 64},
@@ -133,7 +134,7 @@ AnimationPattern gDropAnimations[] = {
 #if USE_TOUCHSENSORS
 AnimationPattern gTouchAnimations[] = { 
   {sinelon, 120, 4}, 
-  {juggle, 30, 120},
+  {discostrobe, 30, 120},
   {bpm, 120, 5}, 
   {fadeOut, 255, 0}
 };
@@ -160,7 +161,7 @@ void setup() {
   FastLED.addLeds<NEOPIXEL, LED_PIN>(leds, STRIP_SIZE).setCorrection(TypicalLEDStrip);
   
 #if USE_2ND_STRIP
-  FastLED.addLeds<NEOPIXEL, LED2_PIN>(leds2, STRIP_SIZE).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<NEOPIXEL, LED2_PIN>(leds2, STRIP2_SIZE).setCorrection(TypicalLEDStrip);
 #endif
 
   FastLED.setBrightness(DEFAULT_BRIGHTNESS);
@@ -215,6 +216,7 @@ void onLeftTouched(bool isReleased) {
 
   gCurrentPatternNumber = 0;
   gSequence = gTouchAnimations;
+  gRenderingSettings = LEFT_STRIP_ONLY;
   
   if (isReleased) { 
     // Clear out the strip 
@@ -227,6 +229,7 @@ void onRightTouched(bool isReleased) {
   
   gCurrentPatternNumber = 1;
   gSequence = gTouchAnimations;
+  gRenderingSettings = RIGHT_STRIP_ONLY;
   
   if (isReleased) { 
     // Clear out the strip 
@@ -243,22 +246,21 @@ void onBothTouched(bool isReleased) {
 void onBottomLeftTouched(bool isReleased) { 
   PRINTX("Bottom Left:", isReleased);  
   
-  gSequence = gAnimations;
-  gCurrentPatternNumber = 4;
-  
   if (isReleased) { 
-    gSequence = gTouchAnimations;
-    // Clear out the strip 
-    gCurrentPatternNumber = 3;
-  } 
+//    gSequence = gTouchAnimations;
+//    // Clear out the strip 
+//    gCurrentPatternNumber = 3;
+  } else { 
+    onClick();  
+  }
 }
 
 void onBottomRightTouched(bool isReleased) {
   PRINTX("Bottom Right:", isReleased); 
     Serial.println("Bottom right touched");
   
-  gSequence = gAnimations;
-  gCurrentPatternNumber = 5;
+  gSequence = gTouchAnimations;
+  gCurrentPatternNumber = 2;
   
    if (isReleased) { 
     gSequence = gTouchAnimations;
@@ -286,6 +288,7 @@ void onHugTouched(bool isReleased) {
 
 void onClick() { 
   //Next animation
+  Serial.println("ONCLICK!");
   
   gCurrentPatternNumber = (gCurrentPatternNumber+1) % 
     (sizeof(gAnimations) / sizeof(gAnimations[0]));
@@ -377,8 +380,11 @@ void loop() {
   
   gHue++;
     
+  #ifdef DEBUG_ANIMATIONS
+  EVERY_N_MILLISECONDS(500)  {Serial.print("FPS: ");Serial.println(FastLED.getFPS());}
+  #endif
+  
   #ifdef DEBUG
-  EVERY_N_MILLISECONDS(500)  {PRINTX("FPS:", FastLED.getFPS());}
   EVERY_N_MILLISECONDS(2000) {PRINTX("FREE RAM:", freeRam());}
   #endif
 } 
@@ -386,33 +392,34 @@ void loop() {
 
 void mirrorLeds() { 
   
-  
-  // TODO Optimize! Make the two loops in one
-  for (int i = STRIP_SIZE-1, x = 0; i >= NUM_LEDS; i--, x++) { 
-    leds[i] = leds[x];
+  for (int i = 0; i < STRIP_SIZE; i++) { 
+    if (i < NUM_LEDS) { 
+      
+#ifdef USE_2ND_STRIP
+      if (gRenderingSettings != LEFT_STRIP_ONLY) {
+        leds2[i] = leds[i];
+      } else { 
+        leds2[i] = CRGB::Black;
+      }
+      
+      if (gRenderingSettings == RIGHT_STRIP_ONLY) { 
+        leds[i] = CRGB::Black;
+      }
+     
+#endif 
+
+      if (i < STRIP_SIZE - NUM_LEDS) { 
+        // Copy to the front side
+        leds[STRIP_SIZE-i-1] = leds[i];
+        // Dim the back by max 50%
+        leds[i].fadeLightBy(128*(1/i+1));
+      }
+   }
+
   }
-  
-#if USE_2ND_STRIP   
 
-  for (int i = 0; i < NUM_LEDS; i++) { 
-    
-    if (gRenderingSettings == LEFT_STRIP_ONLY) {
-      leds2[i] = CRGB::Black;
-    }
-    else if (gRenderingSettings == RIGHT_STRIP_ONLY) { 
-      leds2[i] = leds[i];
-      leds[i] = CRGB::Black;
-    }
-    else if (gRenderingSettings == BOTH_STRIPS) { 
-      leds2[i] = leds[i];
-    }
-#endif  
-
-  }  
- 
   // Go back to default
   gRenderingSettings = BOTH_STRIPS;
-  
   
 }
 
@@ -426,12 +433,12 @@ void reverseLeds() {
   }
 }
 
-static void delayToSyncFrameRate( uint8_t framesPerSecond) {
+static void delayToSyncFrameRate(uint8_t framesPerSecond) {
   static uint32_t msprev = 0;
   uint32_t mscur = millis();
   uint16_t msdelta = mscur - msprev;
   uint16_t mstargetdelta = 1000 / framesPerSecond;
-  if( msdelta < mstargetdelta) {
+  if(msdelta < mstargetdelta) {
     delay_at_max_brightness_for_power(mstargetdelta - msdelta);
   }
   msprev = mscur;
